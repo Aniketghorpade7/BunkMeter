@@ -1,5 +1,6 @@
 package com.bunkmeter.app.ui.settings;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,11 +10,16 @@ import android.view.*;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
 import com.bunkmeter.app.R;
-import com.bunkmeter.app.ui.settings.EditProfileActivity;
+import com.bunkmeter.app.repository.ResetRepository;
+import com.bunkmeter.app.ui.main.MainActivity;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.io.File;
 
@@ -21,6 +27,18 @@ public class SettingsFragment extends Fragment {
 
     private ImageView idCardImage;
     private TextView tvStudentName, tvPRN, tvDept, tvSem;
+    private AlertDialog progressDialog;
+
+    // Modern launcher to handle returning from ExportActivity
+    private final ActivityResultLauncher<Intent> exportLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                // If the export was successful and meant for a reset, perform the reset!
+                if (result.getData() != null && result.getData().getBooleanExtra("export_success", false)) {
+                    performReset();
+                }
+            }
+    );
 
     public SettingsFragment() {}
 
@@ -43,14 +61,12 @@ public class SettingsFragment extends Fragment {
 
         idCardImage.setOnClickListener(v -> showImagePreview());
 
-        //Dummy data called
         // --- SECRET DEVELOPER BUTTON: Long-press to inject data ---
         idCardImage.setOnLongClickListener(v -> {
             new android.app.AlertDialog.Builder(getContext())
                     .setTitle("Developer Tools")
                     .setMessage("Inject 30 days of fake data into the database for testing?")
                     .setPositiveButton("Inject Data", (dialog, which) -> {
-                        // THIS is the line that connects to and runs your new file!
                         com.bunkmeter.app.utils.MockDataGenerator.injectDummyData(getContext(), getActivity());
                     })
                     .setNegativeButton("Cancel", null)
@@ -72,14 +88,96 @@ public class SettingsFragment extends Fragment {
 
 
         cardReset.setOnClickListener(v -> {
-            // TODO BottomSheet
+            showResetWarningBottomSheet();
         });
 
         return view;
     }
 
-    private void loadProfileData() {
+    // ================= RESET APP LOGIC =================
+    private void showResetWarningBottomSheet() {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+        View bottomSheetView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.bottom_sheet_reset_warning, null);
+        bottomSheetDialog.setContentView(bottomSheetView);
 
+        bottomSheetView.findViewById(R.id.btnCancel).setOnClickListener(v -> bottomSheetDialog.dismiss());
+
+        bottomSheetView.findViewById(R.id.btnContinue).setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            showExportPromptBottomSheet();
+        });
+
+        bottomSheetDialog.show();
+    }
+
+    private void showExportPromptBottomSheet() {
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+        View bottomSheetView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.bottom_sheet_reset_export, null);
+        bottomSheetDialog.setContentView(bottomSheetView);
+
+        bottomSheetView.findViewById(R.id.btnSkip).setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            performReset(); // Proceed directly to reset without exporting
+        });
+
+        bottomSheetView.findViewById(R.id.btnExportAndContinue).setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            Intent intent = new Intent(getActivity(), ExportActivity.class);
+            intent.putExtra("fromReset", true); // Pass flag to ExportActivity
+            exportLauncher.launch(intent); // Launch with our modern listener
+        });
+
+        bottomSheetDialog.show();
+    }
+
+    private void performReset() {
+        showProgressDialog();
+
+        ResetRepository repository = new ResetRepository(requireContext());
+        repository.resetAppData(new ResetRepository.ResetCallback() {
+            @Override
+            public void onSuccess() {
+                hideProgressDialog();
+                Toast.makeText(getContext(), "App reset successful", Toast.LENGTH_SHORT).show();
+
+                // Navigate back to a clean MainActivity
+                Intent intent = new Intent(getActivity(), MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                hideProgressDialog();
+                Toast.makeText(getContext(), "Error resetting app: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void showProgressDialog() {
+        if (progressDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_progress_reset, null);
+            builder.setView(view);
+            builder.setCancelable(false); // MUST NOT BE CANCELLED during db operations
+            progressDialog = builder.create();
+            if (progressDialog.getWindow() != null) {
+                progressDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
+        }
+        progressDialog.show();
+    }
+
+    private void hideProgressDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+    }
+
+    // ================= LOAD PROFILE =================
+    private void loadProfileData() {
         SharedPreferences prefs = getContext().getSharedPreferences("UserProfile", Context.MODE_PRIVATE);
 
         String name = prefs.getString("name", "Your Name");
@@ -105,7 +203,6 @@ public class SettingsFragment extends Fragment {
         }
     }
 
-    // ================= LOAD PROFILE =================
     @Override
     public void onResume() {
         super.onResume();
@@ -114,7 +211,6 @@ public class SettingsFragment extends Fragment {
 
     // ================= IMAGE PREVIEW =================
     private void showImagePreview() {
-
         android.app.Dialog dialog = new android.app.Dialog(getActivity());
         dialog.setContentView(R.layout.dialog_image_preview);
 

@@ -35,6 +35,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SubjectDao subjectDao();
     public abstract TimetableDao timetableDao();
 
+    public abstract ResetDao resetDao();
+
     // Singleton
     private static volatile AppDatabase INSTANCE;
 

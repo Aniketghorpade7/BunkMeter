@@ -88,12 +88,10 @@ public class ExportActivity extends AppCompatActivity {
     private void setupToolbar() {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        // This gives you the clean Pixel back arrow behavior
         toolbar.setNavigationOnClickListener(v -> finish());
     }
 
     private void loadPreviewData() {
-        // 1. Fetch from SharedPreferences
         SharedPreferences prefs = getSharedPreferences("UserProfile", MODE_PRIVATE);
         String name = prefs.getString("name", "Student");
         rollNo = prefs.getString("rollNo", "00");
@@ -101,12 +99,10 @@ public class ExportActivity extends AppCompatActivity {
 
         tvStudentInfo.setText(String.format("👤 Student: %s\n🎓 Semester: %s | Roll No: %s", name, semester, rollNo));
 
-        // 2. Fetch database stats in background (Mocked here, replace with your actual Repository calls)
         Executors.newSingleThreadExecutor().execute(() -> {
-            // TODO: Call your SubjectRepository / AttendanceRepository to get real counts
-            int totalSubjects = 6; // Example
-            int totalClasses = 142; // Example
-            int attendancePercent = 78; // Example
+            int totalSubjects = 6;
+            int totalClasses = 142;
+            int attendancePercent = 78;
 
             runOnUiThread(() -> {
                 tvStatsSummary.setText(String.format(
@@ -118,13 +114,11 @@ public class ExportActivity extends AppCompatActivity {
     }
 
     private void startExportWorker() {
-        // Show progress overlay
         progressOverlay.setVisibility(View.VISIBLE);
         btnOpenFile.setVisibility(View.GONE);
         progressBar.setIndeterminate(false);
         progressBar.setProgressCompat(0, true);
 
-        // Prepare data to send to Worker
         Data inputData = new Data.Builder()
                 .putString("timeframe", spinnerTimeframe.getSelectedItem().toString())
                 .putBoolean("includeCharts", cbIncludeCharts.isChecked())
@@ -133,21 +127,17 @@ public class ExportActivity extends AppCompatActivity {
                 .putString("semester", semester)
                 .build();
 
-        // Create Work Request
         OneTimeWorkRequest exportRequest = new OneTimeWorkRequest.Builder(ExportWorker.class)
                 .setInputData(inputData)
                 .build();
 
-        // Start Work
         WorkManager.getInstance(this).enqueue(exportRequest);
 
-        // Observe Work Status (this survives app minimizing!)
         WorkManager.getInstance(this).getWorkInfoByIdLiveData(exportRequest.getId())
                 .observe(this, new Observer<WorkInfo>() {
                     @Override
                     public void onChanged(WorkInfo workInfo) {
                         if (workInfo != null) {
-                            // Update Progress
                             Data progress = workInfo.getProgress();
                             int currentProgress = progress.getInt("progress", 0);
                             String stateMessage = progress.getString("message");
@@ -159,12 +149,24 @@ public class ExportActivity extends AppCompatActivity {
                                 progressBar.setProgressCompat(currentProgress, true);
                             }
 
-                            // Handle Completion States
                             if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
                                 tvProgressState.setText("✅ Export Complete!");
                                 generatedFileUri = workInfo.getOutputData().getString("fileUri");
                                 btnOpenFile.setVisibility(View.VISIBLE);
                                 progressBar.setProgressCompat(100, true);
+
+                                // --- THIS IS THE FIX ---
+                                // Only return to Settings automatically if the export succeeded AND we came from the Reset flow
+                                boolean fromReset = getIntent().getBooleanExtra("fromReset", false);
+                                if (fromReset) {
+                                    Toast.makeText(ExportActivity.this, "Export finished! Proceeding to reset...", Toast.LENGTH_SHORT).show();
+                                    Intent resultIntent = new Intent();
+                                    resultIntent.putExtra("export_success", true);
+                                    setResult(RESULT_OK, resultIntent);
+                                    finish();
+                                }
+                                // ------------------------
+
                             } else if (workInfo.getState() == WorkInfo.State.FAILED) {
                                 tvProgressState.setText("❌ Export Failed. Try again.");
                                 btnOpenFile.setVisibility(View.GONE);

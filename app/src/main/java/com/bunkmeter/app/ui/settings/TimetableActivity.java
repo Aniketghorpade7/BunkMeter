@@ -73,17 +73,20 @@ public class TimetableActivity extends AppCompatActivity {
             getSupportActionBar().hide(); // Hide the default action bar
         }
 
-        View btnBack = findViewById(R.id.btnBack);
-        btnBack.setOnClickListener(v -> finish());
+        // 1. Correct Toolbar Setup
+        com.google.android.material.appbar.MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setNavigationOnClickListener(v -> finish());
 
-        // Fix for the status bar overlap (Edge-to-Edge)
-        View header = findViewById(R.id.header);
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(header, (v, windowInsets) -> {
-            androidx.core.graphics.Insets insets = windowInsets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
-            // Apply the status bar height as top padding
-            v.setPadding(v.getPaddingLeft(), insets.top, v.getPaddingRight(), v.getPaddingBottom());
-            return windowInsets;
-        });
+        // 2. Fix for the status bar overlap (Apply it to the new AppBarLayout instead of the deleted header)
+        View appBarLayout = findViewById(R.id.appBarLayout);
+        if (appBarLayout != null) {
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(appBarLayout, (v, windowInsets) -> {
+                androidx.core.graphics.Insets insets = windowInsets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+                // Add padding to the top so it doesn't hide behind the status bar
+                v.setPadding(0, insets.top, 0, 0);
+                return androidx.core.view.WindowInsetsCompat.CONSUMED;
+            });
+        }
     }
 
 

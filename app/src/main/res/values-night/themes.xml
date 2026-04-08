@@ -1,7 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.BunkMeter" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
-    </style>
+
+        <item name="colorPrimary">@color/fallback_dark_primary</item>
+        <item name="colorSurface">@color/fallback_dark_surface</item>
+        <item name="android:colorBackground">@color/fallback_dark_surface</item>
+        <item name="colorOnSurface">@color/fallback_dark_onSurface</item>
+
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar">false</item> </style>
 </resources>

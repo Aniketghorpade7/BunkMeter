@@ -45,7 +45,8 @@ dependencies {
 
     //for Card View
     implementation 'androidx.cardview:cardview:1.0.0'
-    //for button to add today's extra lecture
+
+    //for button to add today's extra lecture also for colours
     implementation 'com.google.android.material:material:1.11.0'
 
     //for color picker

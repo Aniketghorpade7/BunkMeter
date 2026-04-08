@@ -1,7 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.BunkMeter" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:statusBarColor">@android:color/white</item>
+
+        <item name="colorPrimary">@color/fallback_light_primary</item>
+        <item name="colorSurface">@color/fallback_light_surface</item>
+        <item name="android:colorBackground">@color/fallback_light_surface</item>
+        <item name="colorOnSurface">@color/fallback_light_onSurface</item>
+
+        <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
 

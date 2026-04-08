@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
+    <color name="status_present">#388E3C</color> <color name="status_bunk">#D32F2F</color>    <color name="status_cancel">#757575</color>  <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
 
-    <color name="white">#FFFFFFFF</color>
-    
-    <color name="purple_500">#6200EE</color>
+    <color name="fallback_light_primary">#6750A4</color>
+    <color name="fallback_light_surface">#FEF7FF</color>
+    <color name="fallback_light_onSurface">#1D1B20</color>
 
-    <color name="background">#F3F0FA</color>
+    <color name="fallback_dark_primary">#D0BCFF</color>
+    <color name="fallback_dark_surface">#141218</color>
+    <color name="fallback_dark_onSurface">#E6E0E9</color>
 </resources>

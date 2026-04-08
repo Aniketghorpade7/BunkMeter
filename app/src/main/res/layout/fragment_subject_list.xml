@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
 
     <TextView
         android:id="@+id/tvEmptySubjects"
@@ -12,8 +13,7 @@
         android:text="Whoops! You haven't added any subjects yet.\nAre you secretly a wizard with no classes? 🧙‍♂️✨\nTap the + button to get started!"
         android:textAlignment="center"
         android:textSize="18sp"
-        android:textColor="?android:textColorSecondary"
-        android:lineSpacingExtra="6dp"
+        android:textColor="?attr/colorOnSurfaceVariant" android:lineSpacingExtra="6dp"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"

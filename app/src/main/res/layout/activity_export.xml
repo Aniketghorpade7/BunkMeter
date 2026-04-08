@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:colorBackground"
+    android:background="?attr/colorSurface"
     android:fitsSystemWindows="true">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -42,7 +42,7 @@
                 app:cardElevation="2dp"
                 app:cardCornerRadius="16dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="#E0E0E0">
+                app:strokeColor="?attr/colorOutlineVariant">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -55,16 +55,17 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Loading profile..."
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" android:layout_marginVertical="12dp"/>
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorOutlineVariant" android:layout_marginVertical="12dp"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Quick Stats"
-                        android:textColor="@color/design_default_color_primary"
+                        android:textColor="?attr/colorPrimary"
                         android:textStyle="bold"
                         android:layout_marginBottom="8dp"/>
 
@@ -73,6 +74,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Analyzing attendance data..."
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:lineSpacingExtra="4dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -81,6 +83,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Export Options"
+                android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"
                 android:textSize="18sp"
                 android:layout_marginTop="32dp"
@@ -97,6 +100,7 @@
                 android:id="@+id/cbIncludeCharts"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
                 android:text="Include Graphical Charts (Bar/Pie)"
                 android:checked="true" />
 
@@ -104,6 +108,7 @@
                 android:id="@+id/cbIncludeDaily"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
                 android:text="Include Daily Summary Sheet"
                 android:checked="true" />
 
@@ -123,7 +128,7 @@
         android:id="@+id/progressOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#D9FFFFFF"
+        android:background="?attr/colorSurface"
         android:elevation="10dp"
         android:visibility="gone"
         android:clickable="true"
@@ -149,6 +154,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Preparing to export..."
+                android:textColor="?attr/colorOnSurface"
                 android:layout_marginTop="24dp"
                 android:textSize="18sp"
                 android:textStyle="bold" />

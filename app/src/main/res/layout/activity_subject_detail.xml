@@ -2,19 +2,21 @@
     android:orientation="vertical"
     android:padding="16dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
 
     <TextView
         android:id="@+id/tvSubjectName"
         android:textSize="22sp"
         android:textStyle="bold"
+        android:textColor="?attr/colorOnSurface"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
     <TextView
         android:id="@+id/tvAttendance"
         android:textSize="18sp"
-        android:textColor="@color/purple_500"
+        android:textColor="?attr/colorPrimary"
         android:layout_marginTop="8dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>

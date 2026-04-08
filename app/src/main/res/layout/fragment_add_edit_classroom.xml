@@ -1,95 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="?attr/colorSurface"> <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="24dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingBottom="24dp"> <EditText
+    <EditText
         android:id="@+id/etClassroomName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Classroom Name (e.g. Room 101)"
+        android:textColor="?attr/colorOnSurface"
+        android:textColorHint="?attr/colorOnSurfaceVariant"
         android:inputType="text"
         android:minHeight="48dp" />
 
-        <Button
-            android:id="@+id/btnSetLocation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="@android:color/white"
-            android:text="📍 Use Current Location" />
+    <Button
+        android:id="@+id/btnSetLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="?attr/colorPrimary"
+        android:textColor="?attr/colorOnPrimary" android:text="📍 Use Current Location" />
 
-        <TextView
-            android:id="@+id/tvLocationStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Location not set"
-            android:textColor="@android:color/holo_red_dark" />
+    <TextView
+        android:id="@+id/tvLocationStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Location not set"
+        android:textColor="?attr/colorError" /> <TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="24dp"
+    android:text="Radius (10m - 30m)"
+    android:textColor="?attr/colorOnSurface"
+    android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Radius (10m - 30m)"
-            android:textStyle="bold" />
+    <SeekBar
+        android:id="@+id/sbRadius"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:max="20"
+        android:progress="0" />
 
-        <SeekBar
-            android:id="@+id/sbRadius"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:max="20"
-            android:progress="0" />
+    <TextView
+        android:id="@+id/tvRadiusValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:text="10 meters" />
 
-        <TextView
-            android:id="@+id/tvRadiusValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="10 meters" />
+    <Button
+        android:id="@+id/btnTestClassroom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="?attr/colorPrimary"
+        android:textColor="?attr/colorOnPrimary"
+        android:text="🧪 Test Classroom" />
 
-        <Button
-            android:id="@+id/btnTestClassroom"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="@android:color/white"
-            android:text="🧪 Test Classroom" />
+    <TextView
+        android:id="@+id/tvTestResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textColor="?attr/colorOnSurface"
+        android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tvTestResult"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:backgroundTint="?attr/colorPrimary"
+        android:textColor="?attr/colorOnPrimary"
+        android:text="Save Classroom" />
 
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="@android:color/white"
-            android:text="Save Classroom" />
-
-        <Button
-            android:id="@+id/btnDeleteClassroom"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Delete Classroom"
-            android:textColor="@android:color/holo_red_dark"
-            style="?attr/materialButtonOutlinedStyle"
-            android:visibility="gone" />
-    </LinearLayout>
+    <Button
+        android:id="@+id/btnDeleteClassroom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Delete Classroom"
+        android:textColor="?attr/colorError" style="?attr/materialButtonOutlinedStyle"
+        android:visibility="gone" />
+</LinearLayout>
 </androidx.core.widget.NestedScrollView>

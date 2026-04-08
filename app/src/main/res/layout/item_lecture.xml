@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="12dp"
-    card_view:cardCornerRadius="12dp"
+    card_view:cardBackgroundColor="?attr/colorSurface" card_view:cardCornerRadius="12dp"
     card_view:cardElevation="6dp">
 
     <LinearLayout
@@ -19,23 +19,21 @@
             android:text="OS"
             android:textStyle="bold"
             android:textSize="20sp"
-            android:textColor="?android:textColorPrimary"
-            android:layout_width="wrap_content"
+            android:textColor="?attr/colorOnSurface" android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
         <TextView
             android:id="@+id/tvRoomName"
             android:text="Room 101"
             android:textSize="16sp"
-            android:textColor="?android:textColorSecondary"
-            android:layout_marginTop="4dp"
+            android:textColor="?attr/colorOnSurfaceVariant" android:layout_marginTop="4dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
         <TextView
             android:id="@+id/tvTime"
             android:text="10:00 - 11:00"
-            android:layout_marginTop="4dp"
+            android:textColor="?attr/colorOnSurface" android:layout_marginTop="4dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
@@ -49,24 +47,21 @@
             <Button
                 android:id="@+id/btnAttend"
                 android:text="Present"
-                android:backgroundTint="#4CAF50"
-                android:layout_marginEnd="8dp"
+                android:textColor="@android:color/white" android:backgroundTint="@color/status_present" android:layout_marginEnd="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
             <Button
                 android:id="@+id/btnBunk"
                 android:text="Bunk"
-                android:backgroundTint="#F44336"
-                android:layout_marginEnd="8dp"
+                android:textColor="@android:color/white" android:backgroundTint="@color/status_bunk" android:layout_marginEnd="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
             <Button
                 android:id="@+id/btnCancel"
                 android:text="Cancel"
-                android:backgroundTint="#9E9E9E"
-                android:layout_width="wrap_content"
+                android:textColor="@android:color/white" android:backgroundTint="@color/status_cancel" android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
@@ -75,7 +70,7 @@
             android:text="Pending"
             android:layout_marginTop="10dp"
             android:textStyle="bold"
-            android:layout_width="wrap_content"
+            android:textColor="?attr/colorOnSurfaceVariant" android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
     </LinearLayout>

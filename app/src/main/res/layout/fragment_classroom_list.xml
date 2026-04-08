@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -16,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="No classrooms added yet."
+        android:textColor="?attr/colorOnSurfaceVariant" android:text="No classrooms added yet."
         android:visibility="gone"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -27,5 +28,4 @@
         android:layout_alignParentEnd="true"
         android:layout_margin="24dp"
         android:src="@android:drawable/ic_input_add"
-        app:tint="@android:color/white" />
-</RelativeLayout>
+        app:tint="?attr/colorOnPrimaryContainer" /> </RelativeLayout>

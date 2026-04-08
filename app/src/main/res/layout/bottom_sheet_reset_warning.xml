@@ -12,15 +12,13 @@
         android:text="⚠️ Reset App Data"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@android:color/holo_red_dark"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="This will permanently delete all your attendance, subjects, classrooms, and timetable data.\n\nThis action cannot be undone."
-        android:textSize="16sp"
-        android:textColor="#555555"/>
+        android:textColor="?attr/colorError"/> <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:text="This will permanently delete all your attendance, subjects, classrooms, and timetable data.\n\nThis action cannot be undone."
+    android:textSize="16sp"
+    android:textColor="?attr/colorOnSurfaceVariant"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -41,8 +39,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:backgroundTint="@android:color/holo_red_dark"
-            android:textColor="@android:color/white"
-            android:text="Continue"/>
+            android:backgroundTint="?attr/colorError" android:textColor="?attr/colorOnError" android:text="Continue"/>
     </LinearLayout>
 </LinearLayout>

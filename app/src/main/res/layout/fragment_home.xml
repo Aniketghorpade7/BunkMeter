@@ -3,9 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
 
-    <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="0dp"
@@ -23,15 +23,13 @@
         android:text="No classes today!\nTime to sleep in, play some games, or... maybe actually study? 🎮😴"
         android:textAlignment="center"
         android:textSize="18sp"
-        android:textColor="?android:textColorSecondary"
-        android:lineSpacingExtra="6dp"
+        android:textColor="?attr/colorOnSurfaceVariant" android:lineSpacingExtra="6dp"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Floating Action Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddLecture"
         android:layout_width="wrap_content"

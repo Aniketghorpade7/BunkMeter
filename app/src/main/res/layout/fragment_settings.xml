@@ -3,230 +3,217 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#EDEDED">
-
-    <!-- CENTER CONTAINER -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
+    android:background="?attr/colorSurface"> <ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
     <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_margin="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
+            app:cardUseCompatPadding="true">
 
-            <!-- MAIN CARD -->
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="8dp"
-                app:cardUseCompatPadding="true">
+                android:orientation="vertical"
+                android:padding="20dp">
 
-                <LinearLayout
+                <ImageView
+                    android:id="@+id/idCardImage"
+                    android:layout_width="200dp"
+                    android:layout_height="260dp"
+                    android:layout_gravity="center"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/card_bg"
+                    android:src="@drawable/ic_launcher_background"/>
+
+                <TextView
+                    android:id="@+id/tvStudentName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="12dp"
+                    android:text="Student Name"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
+                    android:layout_marginTop="16dp"
+                    android:text="Roll Number"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"/> <TextView
+                android:id="@+id/tvPRN"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
+                android:text="0000001"
+                android:textSize="16sp"/>
 
-                    <!-- ID CARD IMAGE (RECTANGULAR) -->
-                    <ImageView
-                        android:id="@+id/idCardImage"
-                        android:layout_width="200dp"
-                        android:layout_height="260dp"
-                        android:layout_gravity="center"
-                        android:scaleType="centerCrop"
-                        android:background="@drawable/card_bg"
-                        android:src="@drawable/ic_launcher_background"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Department"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"/> <TextView
+                android:id="@+id/tvDept"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
+                android:text="IT"
+                android:textSize="16sp"/>
 
-                    <!-- NAME -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Semester"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"/> <TextView
+                android:id="@+id/tvSem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
+                android:text="0"
+                android:textSize="16sp"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="20dp"
+                    android:background="?attr/colorOutlineVariant"/> <LinearLayout
+                android:id="@+id/cardProfile"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:gravity="center_vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="?attr/colorOnSurface"
+                    android:text="Edit Profile"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:text=">"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:gravity="center"/>
+            </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cardTimetable"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:gravity="center_vertical"
+                    android:padding="12dp">
+
                     <TextView
-                        android:id="@+id/tvStudentName"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginTop="12dp"
-                        android:text="Student Name"
-                        android:textSize="18sp"
-                        android:textStyle="bold"/>
-
-                    <!-- Roll No. -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="Roll Number"
-                        android:textSize="12sp"
-                        android:textColor="#888"/>
-
-                    <TextView
-                        android:id="@+id/tvPRN"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="0000001"
+                        android:layout_weight="1"
+                        android:textColor="?attr/colorOnSurface"
+                        android:text="Timetable"
                         android:textSize="16sp"/>
 
-                    <!-- Dept -->
                     <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Department"
-                        android:textSize="12sp"
-                        android:textColor="#888"/>
-
-                    <TextView
-                        android:id="@+id/tvDept"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="IT"
-                        android:textSize="16sp"/>
-
-                    <!-- Sem -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Semester"
-                        android:textSize="12sp"
-                        android:textColor="#888"/>
-
-                    <TextView
-                        android:id="@+id/tvSem"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textSize="16sp"/>
-
-                    <!-- DIVIDER -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="20dp"
-                        android:background="#EEEEEE"/>
-
-                    <!-- ACTIONS -->
-
-                    <!-- PROFILE -->
-                    <LinearLayout
-                        android:id="@+id/cardProfile"
-                        android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Edit Profile"
-                            android:textSize="16sp"/>
-
-                        <TextView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:text=">"
-                            android:gravity="center"/>
-                    </LinearLayout>
-
-                    <!-- TIMETABLE -->
-                    <LinearLayout
-                        android:id="@+id/cardTimetable"
-                        android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Timetable"
-                            android:textSize="16sp"/>
-
-                        <TextView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:text=">"
-                            android:gravity="center"/>
-                    </LinearLayout>
-
-                    <!-- CLASSROOM -->
-                    <LinearLayout
-                        android:id="@+id/cardClassroom"
-                        android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Classrooms"
-                            android:textSize="16sp"/>
-
-                        <TextView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:text=">"
-                            android:gravity="center"/>
-                    </LinearLayout>
-
-                    <!-- EXPORT -->
-                    <LinearLayout
-                        android:id="@+id/cardExport"
-                        android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Export Data"
-                            android:textSize="16sp"/>
-
-                        <TextView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:text=">"
-                            android:gravity="center"/>
-                    </LinearLayout>
-
-                    <!-- RESET -->
-                    <LinearLayout
-                        android:id="@+id/cardReset"
-                        android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Reset App"
-                            android:textColor="@android:color/holo_red_dark"
-                            android:textSize="16sp"/>
-
-                        <TextView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:text="!"
-                            android:gravity="center"/>
-                    </LinearLayout>
-
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:text=">"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:gravity="center"/>
                 </LinearLayout>
 
-            </com.google.android.material.card.MaterialCardView>
+                <LinearLayout
+                    android:id="@+id/cardClassroom"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:gravity="center_vertical"
+                    android:padding="12dp">
 
-        </LinearLayout>
-    </ScrollView>
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="?attr/colorOnSurface"
+                        android:text="Classrooms"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:text=">"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:gravity="center"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cardExport"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:gravity="center_vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="?attr/colorOnSurface"
+                        android:text="Export Data"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:text=">"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:gravity="center"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cardReset"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:gravity="center_vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Reset App"
+                        android:textColor="?attr/colorError" android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:text="!"
+                        android:textColor="?attr/colorError"
+                        android:gravity="center"/>
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</ScrollView>
 
 </FrameLayout>

@@ -22,13 +22,38 @@
             app:navigationIcon="?attr/homeAsUpIndicator" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/dayRecyclerView"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/appBarLayout" android:padding="8dp"
-        android:clipToPadding="false"
-        android:paddingBottom="120dp"/>
+        android:layout_below="@id/appBarLayout"
+        android:fillViewport="true"
+        android:paddingBottom="120dp"
+        android:clipToPadding="false">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RelativeLayout
+                android:id="@+id/timetableTimeBar"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:background="?attr/colorSurface"/>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true">
+
+                <RelativeLayout
+                    android:id="@+id/timetableGrid"
+                    android:layout_width="660dp"
+                    android:layout_height="wrap_content" />
+
+            </HorizontalScrollView>
+        </LinearLayout>
+    </ScrollView>
 
     <TextView
         android:id="@+id/txtEmpty"

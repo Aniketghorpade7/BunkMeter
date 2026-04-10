@@ -36,7 +36,7 @@
                     android:layout_gravity="center"
                     android:scaleType="centerCrop"
                     android:background="@drawable/card_bg"
-                    android:src="@drawable/ic_launcher_background"/>
+                    android:src="@drawable/ic_id_card_placeholder"/>
 
                 <TextView
                     android:id="@+id/tvStudentName"

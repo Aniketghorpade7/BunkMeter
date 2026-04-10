@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="260dp"
+    android:viewportWidth="24"
+    android:viewportHeight="32">
+    
+    <!-- Outer Card Border/Background -->
+    <path
+        android:fillColor="#F5F5F5"
+        android:strokeColor="#E0E0E0"
+        android:strokeWidth="1"
+        android:pathData="M4,2 A2,2 0 0,0 2,4 L2,28 A2,2 0 0,0 4,30 L20,30 A2,2 0 0,0 22,28 L22,4 A2,2 0 0,0 20,2 Z" />
+
+    <!-- Top Lanyard Hole (Clip) -->
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M9,4 A1,1 0 0,0 9,6 L15,6 A1,1 0 0,0 15,4 Z" />
+
+    <!-- Profile Picture Head -->
+    <path
+        android:fillColor="#BDBDBD"
+        android:pathData="M12,16 A4,4 0 1,1 12,8 A4,4 0 1,1 12,16" />
+
+    <!-- Profile Picture Shoulders (Vertical ID size) -->
+    <path
+        android:fillColor="#BDBDBD"
+        android:pathData="M6,25 C6,21 9,18 12,18 C15,18 18,21 18,25 Z" />
+
+    <!-- Horizontal Data Lines (representing text) -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M8,27 L16,27"
+        android:strokeWidth="1"
+        android:strokeColor="#E0E0E0"/>
+    
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M10,29 L14,29"
+        android:strokeWidth="1"
+        android:strokeColor="#E0E0E0"/>
+
+</vector>

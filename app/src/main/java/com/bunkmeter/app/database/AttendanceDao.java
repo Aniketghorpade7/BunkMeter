@@ -21,7 +21,7 @@ public interface AttendanceDao
     List<Attendance> getAttendanceBySubject(int subjectId);
 
     // Count total lectures
-    @Query("SELECT COUNT(*) FROM Attendance WHERE subjectId = :subjectId")
+    @Query("SELECT COUNT(*) FROM Attendance WHERE subjectId = :subjectId AND status IN (0, 1)")
     int getTotalClasses(int subjectId);
 
     // Count present lectures

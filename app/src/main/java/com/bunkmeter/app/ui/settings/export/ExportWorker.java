@@ -59,7 +59,7 @@ public class ExportWorker extends Worker {
 
             // Generate the Excel File
             ExcelGenerator generator = new ExcelGenerator();
-            generator.generateReport(outputFile, subjects, attendances, includeCharts, includeDaily);
+            generator.generateReport(getApplicationContext(), outputFile, subjects, attendances, includeCharts, includeDaily);
 
             reportProgress(90, "Finalizing file...");
 

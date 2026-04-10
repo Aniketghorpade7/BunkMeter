@@ -28,7 +28,7 @@
                 android:layout_height="200dp"
                 android:layout_gravity="center"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_profile_placeholder"
+                android:src="@drawable/ic_id_card_placeholder"
                 android:background="@drawable/rounded_image_bg"/>
 
             <Button

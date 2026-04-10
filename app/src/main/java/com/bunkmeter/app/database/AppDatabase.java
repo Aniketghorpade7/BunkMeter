@@ -5,6 +5,8 @@ import android.content.Context;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.bunkmeter.app.database.AttendanceDao;
 import com.bunkmeter.app.database.ClassroomDao;
@@ -25,7 +27,7 @@ import java.util.concurrent.Executors;
                 Classroom.class,
                 Timetable.class
         },
-        version = 2,
+        version = 3,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -49,6 +51,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     "bunkmeter_db"
                             )
+                            .addMigrations(MIGRATION_2_3)
                             .fallbackToDestructiveMigration()
                             .build();
                 }
@@ -56,6 +59,29 @@ public abstract class AppDatabase extends RoomDatabase {
         }
         return INSTANCE;
     }
+
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE Attendance_new (" +
+                "attendanceId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "subjectId INTEGER NOT NULL, " +
+                "date TEXT, " +
+                "startTime INTEGER NOT NULL, " +
+                "endTime INTEGER NOT NULL, " +
+                "status INTEGER NOT NULL, " +
+                "classroomId INTEGER, " +
+                "locationVerified INTEGER NOT NULL, " +
+                "FOREIGN KEY(subjectId) REFERENCES Subject(subjectId) ON UPDATE NO ACTION ON DELETE CASCADE, " +
+                "FOREIGN KEY(classroomId) REFERENCES Classroom(classroomId) ON UPDATE NO ACTION ON DELETE CASCADE)");
+
+            database.execSQL("INSERT INTO Attendance_new (attendanceId, subjectId, date, startTime, endTime, status, classroomId, locationVerified) " +
+                "SELECT attendanceId, subjectId, date, startTime, endTime, status, NULLIF(classroomId, 0), locationVerified FROM Attendance");
+
+            database.execSQL("DROP TABLE Attendance");
+            database.execSQL("ALTER TABLE Attendance_new RENAME TO Attendance");
+        }
+    };
 
     public static AppDatabase getInstance(Context context) {
         return getDatabase(context);

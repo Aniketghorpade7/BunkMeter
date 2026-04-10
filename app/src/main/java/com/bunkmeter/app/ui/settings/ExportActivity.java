@@ -32,7 +32,7 @@ public class ExportActivity extends AppCompatActivity {
 
     private TextView tvStudentInfo, tvStatsSummary, tvProgressState;
     private Spinner spinnerTimeframe;
-    private CheckBox cbIncludeCharts, cbIncludeDaily;
+    private CheckBox cbIncludeCharts;
     private MaterialButton btnGenerate;
     private FrameLayout progressOverlay;
     private CircularProgressIndicator progressBar;
@@ -72,7 +72,7 @@ public class ExportActivity extends AppCompatActivity {
         tvStatsSummary = findViewById(R.id.tvStatsSummary);
         spinnerTimeframe = findViewById(R.id.spinnerTimeframe);
         cbIncludeCharts = findViewById(R.id.cbIncludeCharts);
-        cbIncludeDaily = findViewById(R.id.cbIncludeDaily);
+
         btnGenerate = findViewById(R.id.btnGenerate);
         progressOverlay = findViewById(R.id.progressOverlay);
         progressBar = findViewById(R.id.progressBar);
@@ -122,7 +122,7 @@ public class ExportActivity extends AppCompatActivity {
         Data inputData = new Data.Builder()
                 .putString("timeframe", spinnerTimeframe.getSelectedItem().toString())
                 .putBoolean("includeCharts", cbIncludeCharts.isChecked())
-                .putBoolean("includeDaily", cbIncludeDaily.isChecked())
+                .putBoolean("includeDaily", false)
                 .putString("rollNo", rollNo)
                 .putString("semester", semester)
                 .build();

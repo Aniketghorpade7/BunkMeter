@@ -5,6 +5,17 @@ import com.bunkmeter.app.model.Attendance;
 import com.bunkmeter.app.model.Classroom;
 import com.bunkmeter.app.model.Subject;
 
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.view.View;
+import java.io.ByteArrayOutputStream;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -19,7 +30,7 @@ import java.util.Map;
 
 public class ExcelGenerator {
 
-    public void generateReport(File outputFile, List<Subject> subjects, List<Attendance> attendances, boolean includeCharts, boolean includeDaily) throws Exception {
+    public void generateReport(Context context, File outputFile, List<Subject> subjects, List<Attendance> attendances, boolean includeCharts, boolean includeDaily) throws Exception {
 
         Workbook workbook = new XSSFWorkbook();
 
@@ -87,11 +98,26 @@ public class ExcelGenerator {
         // --- SHEET 4: CHARTS (Optional) ---
         if (includeCharts) {
             Sheet chartSheet = workbook.createSheet("Charts");
-            Row chartHeader = chartSheet.createRow(0);
-            chartHeader.createCell(0).setCellValue("Note regarding Charts in Android POI:");
+            
+            int present = 0, absent = 0;
+            for (Attendance a : attendances) {
+                if (a.getStatus() == 1) present++;
+                else if (a.getStatus() == 0) absent++;
+            }
 
-            Row cRow = chartSheet.createRow(1);
-            cRow.createCell(0).setCellValue("Native chart drawing (XSSFDrawing) requires massive XML configuration which is heavily memory-intensive on Android devices. It is highly recommended to generate charts using an external library (like MPAndroidChart) inside the app rather than inside the Excel file to prevent OutOfMemory crashes.");
+            byte[] chartBytes = generateChartImage(context, present, absent);
+
+            int pictureIdx = workbook.addPicture(chartBytes, Workbook.PICTURE_TYPE_PNG);
+            org.apache.poi.ss.usermodel.CreationHelper helper = workbook.getCreationHelper();
+            org.apache.poi.ss.usermodel.Drawing<?> drawing = chartSheet.createDrawingPatriarch();
+            org.apache.poi.ss.usermodel.ClientAnchor anchor = helper.createClientAnchor();
+
+            anchor.setCol1(1);
+            anchor.setRow1(1);
+            anchor.setCol2(8); // span 7 cols
+            anchor.setRow2(20); // span 19 rows
+
+            org.apache.poi.ss.usermodel.Picture pict = drawing.createPicture(anchor, pictureIdx);
         }
 
         // --- WRITE TO FILE ---
@@ -136,28 +162,60 @@ public class ExcelGenerator {
         return String.format("%02d:%02d", min / 60, min % 60);
     }
 
-    private void createChartSheet(Workbook workbook, List<Attendance> allAttendance) {
-        Sheet sheet = workbook.createSheet("Charts");
+    private byte[] generateChartImage(Context context, int present, int absent) throws Exception {
+        final byte[][] result = new byte[1][1];
+        final Exception[] error = new Exception[1];
+        final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
 
-        int presentCount = 0;
-        int absentCount = 0;
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            try {
+                PieChart chart = new PieChart(context);
+                chart.setLayoutParams(new android.view.ViewGroup.LayoutParams(800, 800));
+                chart.setUsePercentValues(false);
+                chart.getDescription().setEnabled(false);
+                chart.getLegend().setTextSize(24f);
+                chart.setDrawHoleEnabled(true);
+                chart.setHoleColor(Color.WHITE);
+                chart.setHoleRadius(40f);
+                chart.setDrawCenterText(true);
+                chart.setCenterText("Overall\nAttendance");
+                chart.setCenterTextSize(24f);
 
-        for (Attendance a : allAttendance) {
-            if (a.getStatus() == 1) presentCount++;
-            else if (a.getStatus() == 0) absentCount++;
-        }
+                java.util.List<PieEntry> entries = new java.util.ArrayList<>();
+                if (present > 0) entries.add(new PieEntry(present, "Present"));
+                if (absent > 0) entries.add(new PieEntry(absent, "Absent"));
+                
+                if (present == 0 && absent == 0) entries.add(new PieEntry(1, "No Data"));
 
-        // Create a simple table that Excel can immediately turn into a chart
-        Row header = sheet.createRow(0);
-        header.createCell(0).setCellValue("Status");
-        header.createCell(1).setCellValue("Count");
+                PieDataSet dataSet = new PieDataSet(entries, "");
+                dataSet.setColors(Color.parseColor("#4CAF50"), Color.parseColor("#F44336"), Color.DKGRAY);
+                
+                PieData data = new PieData(dataSet);
+                data.setValueTextSize(28f);
+                data.setValueTextColor(Color.WHITE);
+                chart.setData(data);
 
-        Row row1 = sheet.createRow(1);
-        row1.createCell(0).setCellValue("Present");
-        row1.createCell(1).setCellValue(presentCount);
+                // Render off-screen
+                chart.measure(View.MeasureSpec.makeMeasureSpec(800, View.MeasureSpec.EXACTLY),
+                              View.MeasureSpec.makeMeasureSpec(800, View.MeasureSpec.EXACTLY));
+                chart.layout(0, 0, 800, 800);
 
-        Row row2 = sheet.createRow(2);
-        row2.createCell(0).setCellValue("Bunked");
-        row2.createCell(1).setCellValue(absentCount);
+                Bitmap bitmap = Bitmap.createBitmap(800, 800, Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bitmap);
+                chart.draw(canvas);
+
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                result[0] = stream.toByteArray();
+            } catch (Exception e) {
+                error[0] = e;
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        latch.await();
+        if (error[0] != null) throw error[0];
+        return result[0];
     }
 }

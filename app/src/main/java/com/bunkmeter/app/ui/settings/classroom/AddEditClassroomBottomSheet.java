@@ -36,7 +36,7 @@ public class AddEditClassroomBottomSheet extends BottomSheetDialogFragment {
     private Integer classroomId = null;
     private Double savedLat = null;
     private Double savedLon = null;
-    private float currentRadius = 10f;
+    private float currentRadius = 1f;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -65,7 +65,7 @@ public class AddEditClassroomBottomSheet extends BottomSheetDialogFragment {
         sbRadius.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                currentRadius = progress + 10f;
+                currentRadius = progress + 1f;
                 tvRadiusValue.setText((int)currentRadius + " meters");
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
@@ -105,7 +105,7 @@ public class AddEditClassroomBottomSheet extends BottomSheetDialogFragment {
                 savedLat = classroom.getLatitude();
                 savedLon = classroom.getLongitude();
                 currentRadius = classroom.getRadius();
-                sbRadius.setProgress((int)currentRadius - 10);
+                sbRadius.setProgress(Math.max(0, (int)currentRadius - 1));
                 updateLocationUI();
             }
         });

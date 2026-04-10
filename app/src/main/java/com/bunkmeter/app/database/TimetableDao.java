@@ -56,8 +56,27 @@ public interface TimetableDao
             "LEFT JOIN Classroom c ON t.classroomId = c.classroomId " +
             "LEFT JOIN Attendance a ON t.subjectId = a.subjectId AND a.startTime = t.startTime AND a.date = :todayDate " +
             "WHERE t.dayOfWeek = :dayOfWeek " +
-            "ORDER BY t.startTime ASC")
+            "UNION " +
+            "SELECT -1 AS timetableId, a.subjectId, a.startTime, a.endTime, a.classroomId, " +
+            "s.name AS subjectName, s.color AS subjectColor, c.name AS classroomName, " +
+            "CASE WHEN a.status = -3 THEN null ELSE a.status END AS attendanceStatus " +
+            "FROM Attendance a " +
+            "INNER JOIN Subject s ON a.subjectId = s.subjectId " +
+            "LEFT JOIN Classroom c ON a.classroomId = c.classroomId " +
+            "LEFT JOIN Timetable t2 ON a.subjectId = t2.subjectId AND a.startTime = t2.startTime AND t2.dayOfWeek = :dayOfWeek " +
+            "WHERE a.date = :todayDate AND t2.timetableId IS NULL " +
+            "ORDER BY 3 ASC")
     androidx.lifecycle.LiveData<java.util.List<com.bunkmeter.app.model.HomeLectureItem>> getTodaysLecturesLive(int dayOfWeek, String todayDate);
+
+    // Synchronous JOIN query for DailySetupWorker including pending Extra lectures
+    @Query("SELECT timetableId, subjectId, dayOfWeek, startTime, endTime, classroomId, type FROM Timetable WHERE dayOfWeek = :dayOfWeek " +
+           "UNION " +
+           "SELECT -1 AS timetableId, a.subjectId, -1 AS dayOfWeek, a.startTime, a.endTime, a.classroomId, 'Extra' AS type " +
+           "FROM Attendance a " +
+           "LEFT JOIN Timetable t2 ON a.subjectId = t2.subjectId AND a.startTime = t2.startTime AND t2.dayOfWeek = :dayOfWeek " +
+           "WHERE a.date = :todayDate AND t2.timetableId IS NULL " +
+           "ORDER BY 4 ASC")
+    List<Timetable> getTimetableAndExtraForDaySync(int dayOfWeek, String todayDate);
 
     // Lookup classroom for attendance insertion
     @Query("SELECT * FROM Timetable WHERE subjectId = :subjectId AND dayOfWeek = :dayOfWeek AND startTime = :startTime LIMIT 1")

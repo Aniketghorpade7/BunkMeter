@@ -32,7 +32,7 @@ public class DailySetupWorker extends Worker {
         String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-        List<Timetable> todaysLectures = db.timetableDao().getTimetableForDaySync(todayDayOfWeek);
+        List<Timetable> todaysLectures = db.timetableDao().getTimetableAndExtraForDaySync(todayDayOfWeek, todayDate);
 
         WorkManager workManager = WorkManager.getInstance(getApplicationContext());
 
@@ -102,6 +102,9 @@ public class DailySetupWorker extends Worker {
                     if (lectureStartDelay > 0) {
                         // Use timetableId as a stable lectureId so TempReadingStorage keys are unique
                         long lectureId = lecture.getTimetableId();
+                        if (lectureId == -1) {
+                             lectureId = -((long)lecture.getSubjectId() * 10000L + lecture.getStartTime());
+                        }
                         AttendanceScheduler.scheduleAttendanceCheck(
                                 getApplicationContext(),
                                 lectureId,

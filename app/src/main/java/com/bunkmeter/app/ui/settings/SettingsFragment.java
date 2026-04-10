@@ -65,7 +65,7 @@ public class SettingsFragment extends Fragment {
         idCardImage.setOnLongClickListener(v -> {
             new android.app.AlertDialog.Builder(getContext())
                     .setTitle("Developer Tools")
-                    .setMessage("Inject 30 days of fake data into the database for testing?")
+                    .setMessage("Inject 3 months of fake data into the database for testing?")
                     .setPositiveButton("Inject Data", (dialog, which) -> {
                         com.bunkmeter.app.utils.MockDataGenerator.injectDummyData(getContext(), getActivity());
                     })

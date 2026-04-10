@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardBackgroundColor="?attr/colorSurface" app:cardElevation="2dp"
-    app:cardCornerRadius="8dp">
+    android:background="?attr/selectableItemBackground">
 
     <TextView
         android:id="@+id/tvItemClassName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
+        android:padding="20dp"
         android:textSize="18sp"
-        android:textColor="?attr/colorOnSurface" /> </androidx.cardview.widget.CardView>
+        android:gravity="center"
+        android:textStyle="bold"
+        android:background="@drawable/bg_classroom_box"
+        android:textColor="?attr/colorOnSurface" />
+</LinearLayout>

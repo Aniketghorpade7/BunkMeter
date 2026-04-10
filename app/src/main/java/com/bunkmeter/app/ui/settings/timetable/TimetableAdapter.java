@@ -28,6 +28,7 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.View
     private List<Timetable> list;
     private Runnable refresh;
     private SubjectRepository subjectRepo;
+    private com.bunkmeter.app.repository.ClassroomRepository classroomRepo;
 
     public TimetableAdapter(Context context, List<Timetable> list, Runnable refresh) {
         this.context = context;
@@ -35,6 +36,7 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.View
         this.refresh = refresh;
         // Initialize the repo to fetch colors and names
         this.subjectRepo = new SubjectRepository((Application) context.getApplicationContext());
+        this.classroomRepo = new com.bunkmeter.app.repository.ClassroomRepository((Application) context.getApplicationContext());
     }
 
     @NonNull
@@ -87,6 +89,18 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.View
                     break;
                 }
             }
+            if (t.getClassroomId() != null) {
+                classroomRepo.getClassroomById(t.getClassroomId(), classroom -> {
+                    if (classroom != null) {
+                        h.classroomName.setText(classroom.getName());
+                        h.classroomName.setVisibility(View.VISIBLE);
+                    }
+                });
+            } else {
+                ((Activity) context).runOnUiThread(() -> {
+                    h.classroomName.setVisibility(View.GONE);
+                });
+            }
         });
 
         h.itemView.setOnClickListener(v -> {
@@ -97,7 +111,10 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.View
     private String format(int min) {
         int h = min / 60;
         int m = min % 60;
-        return String.format("%02d:%02d", h, m);
+        String amPm = h < 12 ? "AM" : "PM";
+        int displayH = h % 12;
+        if (displayH == 0) displayH = 12;
+        return String.format("%02d:%02d %s", displayH, m, amPm);
     }
 
     @Override
@@ -106,12 +123,13 @@ public class TimetableAdapter extends RecyclerView.Adapter<TimetableAdapter.View
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView subject, time;
+        TextView subject, classroomName, time;
         LinearLayout slotBackground;
 
         public ViewHolder(View v) {
             super(v);
             subject = v.findViewById(R.id.subjectName);
+            classroomName = v.findViewById(R.id.classroomName);
             time = v.findViewById(R.id.time);
             slotBackground = v.findViewById(R.id.slotBackground);
         }

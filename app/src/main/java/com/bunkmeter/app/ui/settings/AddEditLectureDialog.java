@@ -12,8 +12,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,7 +38,7 @@ public class AddEditLectureDialog extends Dialog {
     private Timetable existing;
     private Runnable refresh;
 
-    private Spinner spSubject, spDay, spClassroom;
+    private AutoCompleteTextView spSubject, spDay, spClassroom;
     private Button btnStart, btnEnd, btnSave;
     private TextView tvTitle;
 
@@ -115,37 +115,66 @@ public class AddEditLectureDialog extends Dialog {
             return;
         }
 
+        String selectedSubjectName = spSubject.getText().toString();
+        int subIdTemp = -1;
+        for (Subject s : subjects) {
+            if (s.getName().equals(selectedSubjectName)) {
+                subIdTemp = s.getSubjectId();
+                break;
+            }
+        }
+        final int finalSubId = subIdTemp;
+        
+        if (finalSubId == -1) {
+             Toast.makeText(context, "Invalid subject selected", Toast.LENGTH_SHORT).show();
+             return;
+        }
+
         if (startTime == 0 || endTime == 0 || startTime >= endTime) {
             Toast.makeText(context, "Invalid time range", Toast.LENGTH_SHORT).show();
             return;
         }
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            int subId = subjects.get(spSubject.getSelectedItemPosition()).getSubjectId();
-            int classPos = spClassroom.getSelectedItemPosition();
-            Integer roomId = (classPos > 0 && classrooms != null) ? classrooms.get(classPos - 1).getClassroomId() : null;
+            String selectedRoom = spClassroom.getText().toString();
+            Integer roomId = null;
+            if (classrooms != null && !selectedRoom.equals("None")) {
+                for (Classroom c : classrooms) {
+                    if (c.getName().equals(selectedRoom)) {
+                        roomId = c.getClassroomId();
+                        break;
+                    }
+                }
+            }
 
             if (isTemporary) {
                 // SAVE AS ATTENDANCE (Option 1)
                 Attendance extra = new Attendance();
-                extra.setSubjectId(subId);
-                extra.setClassroomId(roomId != null ? roomId : 0);
+                extra.setSubjectId(finalSubId);
+                extra.setClassroomId(roomId);
                 extra.setDate(targetDate);
                 extra.setStartTime(startTime);
-                extra.setEndTime(endTime);
-                extra.setStatus(2); // PENDING
+                extra.setStatus(-3); // PENDING EXTRA CLASS
 
                 AppDatabase.getInstance(context).attendanceDao().insertAttendance(extra);
                 com.bunkmeter.app.scheduler.NotificationScheduler.rescheduleTodaysScheduleNow(context);
 
                 ((Activity) context).runOnUiThread(() -> {
                     dismiss();
-                    refresh.run();
+                    if (refresh != null) refresh.run();
                 });
             } else {
                 // SAVE AS PERMANENT TIMETABLE
-                int day = spDay.getSelectedItemPosition();
-                insertPermanent(subId, day, roomId);
+                String selectedDay = spDay.getText().toString();
+                int day = 0;
+                String[] daysArr = new String[]{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+                for (int i = 0; i < daysArr.length; i++) {
+                    if (daysArr[i].equals(selectedDay)) {
+                        day = i;
+                        break;
+                    }
+                }
+                insertPermanent(finalSubId, day, roomId);
             }
         });
     }
@@ -160,34 +189,55 @@ public class AddEditLectureDialog extends Dialog {
                     classrooms = activeClassrooms;
                     if (subjects != null) {
                         ArrayAdapter<String> subAdapter = new ArrayAdapter<>(context,
-                                android.R.layout.simple_spinner_item,
+                                android.R.layout.simple_dropdown_item_1line,
                                 subjects.stream().map(Subject::getName).toArray(String[]::new));
                         spSubject.setAdapter(subAdapter);
                     }
-                    spDay.setAdapter(new ArrayAdapter<>(context,
-                            android.R.layout.simple_spinner_item,
-                            new String[]{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}));
+                    String[] daysArray = new String[]{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+                    ArrayAdapter<String> dayAdapter = new ArrayAdapter<>(context,
+                            android.R.layout.simple_dropdown_item_1line, daysArray);
+                    spDay.setAdapter(dayAdapter);
+
                     List<String> roomNames = new ArrayList<>();
                     roomNames.add("None");
                     if (classrooms != null) {
                         for (Classroom c : classrooms) roomNames.add(c.getName());
                     }
-                    spClassroom.setAdapter(new ArrayAdapter<>(context,
-                            android.R.layout.simple_spinner_item, roomNames));
+                    ArrayAdapter<String> roomAdapter = new ArrayAdapter<>(context,
+                            android.R.layout.simple_dropdown_item_1line, roomNames);
+                    spClassroom.setAdapter(roomAdapter);
 
                     if (existing != null) {
                         for (int i = 0; i < subjects.size(); i++) {
                             if (subjects.get(i).getSubjectId() == existing.getSubjectId()) {
-                                spSubject.setSelection(i);
+                                spSubject.setText(subjects.get(i).getName(), false);
                                 break;
                             }
                         }
-                        spDay.setSelection(existing.getDayOfWeek());
+                        spDay.setText(daysArray[existing.getDayOfWeek()], false);
+                        
                         startTime = existing.getStartTime();
                         endTime = existing.getEndTime();
                         btnStart.setText(formatTime(startTime));
                         btnEnd.setText(formatTime(endTime));
                         btnSave.setText("Update");
+
+                        if (existing.getClassroomId() != null && classrooms != null) {
+                             for (Classroom c : classrooms) {
+                                  if (c.getClassroomId() == (int)existing.getClassroomId()) {
+                                      spClassroom.setText(c.getName(), false);
+                                      break;
+                                  }
+                             }
+                        } else {
+                             spClassroom.setText("None", false);
+                        }
+                    } else {
+                        if (subjects != null && !subjects.isEmpty()) {
+                            spSubject.setText(subjects.get(0).getName(), false);
+                        }
+                        spDay.setText(daysArray[0], false);
+                        spClassroom.setText("None", false);
                     }
                 });
             });
@@ -197,10 +247,9 @@ public class AddEditLectureDialog extends Dialog {
     private void pickTime(boolean isStart) {
         new TimePickerDialog(context, (view, h, m) -> {
             int val = h * 60 + m;
-            @SuppressLint("DefaultLocale") String timeString = String.format("%02d:%02d", h, m);
-            if (isStart) { startTime = val; btnStart.setText(timeString); }
-            else { endTime = val; btnEnd.setText(timeString); }
-        }, 9, 0, true).show();
+            if (isStart) { startTime = val; btnStart.setText(formatTime(startTime)); }
+            else { endTime = val; btnEnd.setText(formatTime(endTime)); }
+        }, 9, 0, false).show();
     }
 
     private void insertPermanent(int subjectId, int day, Integer classroomId) {
@@ -209,7 +258,7 @@ public class AddEditLectureDialog extends Dialog {
         timetableRepo.insert(t);
         ((Activity) context).runOnUiThread(() -> {
             dismiss();
-            refresh.run();
+            if (refresh != null) refresh.run();
             // Notify user to create a classroom if none was assigned to this timetable slot
             if (classroomId == null) {
                 AttendanceNotificationHelper.triggerCreateClassroomNotification(context);
@@ -220,9 +269,16 @@ public class AddEditLectureDialog extends Dialog {
     private void deleteTimetable() {
         Executors.newSingleThreadExecutor().execute(() -> {
             timetableRepo.delete(existing);
-            ((Activity) context).runOnUiThread(() -> { dismiss(); refresh.run(); });
+            ((Activity) context).runOnUiThread(() -> { dismiss(); if (refresh != null) refresh.run(); });
         });
     }
 
-    private String formatTime(int min) { return String.format("%02d:%02d", min / 60, min % 60); }
+    private String formatTime(int min) { 
+        int h = min / 60;
+        int m = min % 60;
+        String amPm = h < 12 ? "AM" : "PM";
+        int displayH = h % 12;
+        if (displayH == 0) displayH = 12;
+        return String.format("%02d:%02d %s", displayH, m, amPm); 
+    }
 }

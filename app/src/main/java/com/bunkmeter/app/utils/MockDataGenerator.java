@@ -30,19 +30,20 @@ public class MockDataGenerator {
                 // 1. WIPE EVERYTHING FOR A COMPLETELY CLEAN SLATE
                 db.clearAllTables();
 
-                // 2. CREATE CLASSROOMS & FETCH REAL IDs
-                Classroom r1 = new Classroom(); r1.setName("Room 101"); r1.setLatitude(16.7); r1.setLongitude(74.2); r1.setRadius(20f); r1.setActive(true);
-                Classroom r2 = new Classroom(); r2.setName("Computer Lab"); r2.setLatitude(16.71); r2.setLongitude(74.21); r2.setRadius(30f); r2.setActive(true);
+                // 2. CREATE CLASSROOMS
+                Classroom r1 = new Classroom(); 
+                r1.setName("Room 101"); 
+                r1.setLatitude(16.7123); 
+                r1.setLongitude(74.2145); 
+                r1.setRadius(25f); 
+                r1.setActive(true);
 
                 db.classroomDao().insert(r1);
-                db.classroomDao().insert(r2);
 
-                // Fetch them back since the insert method returns void
                 List<Classroom> savedRooms = db.classroomDao().getActiveClassrooms();
                 int idRoom101 = savedRooms.get(0).getClassroomId();
-                int idLab = savedRooms.get(1).getClassroomId();
 
-                // 3. CREATE SUBJECTS & FETCH REAL IDs
+                // 3. CREATE SUBJECTS
                 db.subjectDao().insertSubject(new Subject("Java Programming", "#FF5722"));
                 db.subjectDao().insertSubject(new Subject("Operating Systems", "#4CAF50"));
                 db.subjectDao().insertSubject(new Subject("Database Management", "#2196F3"));
@@ -54,62 +55,80 @@ public class MockDataGenerator {
                     subjects[i] = savedSubjects.get(i).getSubjectId();
                 }
 
-                // 4. CREATE TIMETABLE (Using your insertTimetable method!)
+                // 4. CREATE TIMETABLE 
                 List<Timetable> weeklySchedule = new ArrayList<>();
                 for (int day = 0; day < 5; day++) { // Mon-Fri
-                    // Morning Lecture
-                    Timetable t1 = new Timetable(subjects[day % 4], day, 540, 600, idRoom101, "Lecture");
-                    db.timetableDao().insertTimetable(t1); // Updated method name!
-                    weeklySchedule.add(t1);
+                    Timetable t1 = new Timetable(subjects[0], day, 480, 540, idRoom101, "Lecture"); // 8:00
+                    db.timetableDao().insertTimetable(t1); weeklySchedule.add(t1);
+                    
+                    Timetable t2 = new Timetable(subjects[1], day, 555, 615, idRoom101, "Lecture"); // 9:15
+                    db.timetableDao().insertTimetable(t2); weeklySchedule.add(t2);
 
-                    // Afternoon Lab
-                    Timetable t2 = new Timetable(subjects[(day + 1) % 4], day, 780, 900, idLab, "Lab");
-                    db.timetableDao().insertTimetable(t2); // Updated method name!
-                    weeklySchedule.add(t2);
+                    Timetable t3 = new Timetable(subjects[2], day, 630, 690, idRoom101, "Lecture"); // 10:30
+                    db.timetableDao().insertTimetable(t3); weeklySchedule.add(t3);
+                    
+                    Timetable t4 = new Timetable(subjects[3], day, 720, 780, idRoom101, "Lecture"); // 12:00
+                    db.timetableDao().insertTimetable(t4); weeklySchedule.add(t4);
                 }
 
-                // 5. CREATE ATTENDANCE WITH PERFECT FOREIGN KEYS
+                // 5. CREATE 3 MONTHS EXACT REQUIREMENT ATTENDANCE 
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                 Calendar calendar = Calendar.getInstance();
-                calendar.add(Calendar.DAY_OF_YEAR, -30); // Go back 30 days
+                int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+                int daysToStartOfWeek = (currentDayOfWeek == Calendar.SUNDAY) ? 6 : currentDayOfWeek - Calendar.MONDAY;
+                calendar.add(Calendar.DAY_OF_YEAR, -daysToStartOfWeek); // Shift to this week's Monday
+                calendar.add(Calendar.DAY_OF_YEAR, -13 * 7); // Go back ~3 months (13 weeks)
+                
                 Random random = new Random();
 
-                for (int i = 0; i < 30; i++) {
-                    int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+                for (int week = 0; week < 14; week++) { // Past 13 weeks + current week
+                    // Map distinct statuses for each subject for this particular week
+                    java.util.Map<Integer, List<Integer>> subjectWeeklyStatus = new java.util.HashMap<>();
+                    for (int subId : subjects) {
+                        int numPresent = 2 + random.nextInt(3); // 2, 3, or 4
+                        int numAbsent = 1;
+                        int numCancelled = 5 - numPresent - numAbsent; // remaining
+                        
+                        List<Integer> statuses = new ArrayList<>();
+                        for (int k = 0; k < numPresent; k++) statuses.add(1); // Present = 1
+                        for (int k = 0; k < numAbsent; k++) statuses.add(0); // Absent = 0
+                        for (int k = 0; k < numCancelled; k++) statuses.add(2); // Cancelled = 2
+                        java.util.Collections.shuffle(statuses, random);
+                        subjectWeeklyStatus.put(subId, statuses);
+                    }
 
-                    int mappedDay = -1;
-                    if (currentDayOfWeek == Calendar.MONDAY) mappedDay = 0;
-                    else if (currentDayOfWeek == Calendar.TUESDAY) mappedDay = 1;
-                    else if (currentDayOfWeek == Calendar.WEDNESDAY) mappedDay = 2;
-                    else if (currentDayOfWeek == Calendar.THURSDAY) mappedDay = 3;
-                    else if (currentDayOfWeek == Calendar.FRIDAY) mappedDay = 4;
-
-                    if (mappedDay != -1) { // If it is a weekday
+                    // Iterate over 5 days (Mon-Fri)
+                    for (int dayIndex = 0; dayIndex < 5; dayIndex++) {
+                        // Avoid generating future days beyond today!
+                        if (calendar.getTimeInMillis() > System.currentTimeMillis()) {
+                            calendar.add(Calendar.DAY_OF_YEAR, 1);
+                            continue; 
+                        }
+                        
                         String dateString = sdf.format(calendar.getTime());
-
                         for (Timetable scheduledClass : weeklySchedule) {
-                            if (scheduledClass.getDayOfWeek() == mappedDay) {
-
+                            if (scheduledClass.getDayOfWeek() == dayIndex) {
                                 Attendance a = new Attendance();
                                 a.setSubjectId(scheduledClass.getSubjectId());
                                 a.setClassroomId(scheduledClass.getClassroomId());
                                 a.setDate(dateString);
                                 a.setStartTime(scheduledClass.getStartTime());
                                 a.setEndTime(scheduledClass.getEndTime());
-
-                                // Randomize status (75% present, 25% bunked)
-                                a.setStatus(random.nextInt(100) < 75 ? 1 : 0);
-
+                                
+                                int status = subjectWeeklyStatus.get(scheduledClass.getSubjectId()).get(dayIndex);
+                                a.setStatus(status);
+                                
                                 db.attendanceDao().insertAttendance(a);
                             }
                         }
+                        calendar.add(Calendar.DAY_OF_YEAR, 1); // Move to next weekday
                     }
-                    calendar.add(Calendar.DAY_OF_YEAR, 1); // Move to next day
+                    calendar.add(Calendar.DAY_OF_YEAR, 2); // Skip Sat/Sun to Next Monday
                 }
 
                 // Notify UI of Success
                 activity.runOnUiThread(() ->
-                        Toast.makeText(context, "✅ App fully populated from scratch!", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "✅ App populated with 3 months of explicit test data!", Toast.LENGTH_LONG).show()
                 );
 
             } catch (Throwable t) {

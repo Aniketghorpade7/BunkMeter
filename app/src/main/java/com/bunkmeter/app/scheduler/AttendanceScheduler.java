@@ -37,16 +37,16 @@ public class AttendanceScheduler {
                 .addTag(NotificationScheduler.TAG_TODAYS_SCHEDULE)
                 .build();
 
-        // Reading 2 — 15 minutes after lecture starts
+        // Reading 2 — 5 minutes after reading 1 finishes (total ~15m)
         OneTimeWorkRequest reading2 = new OneTimeWorkRequest.Builder(LocationReadingWorker.class)
-                .setInitialDelay(15, TimeUnit.MINUTES)
+                .setInitialDelay(5, TimeUnit.MINUTES)
                 .setInputData(locationData.putInt("reading_index", 2).build())
                 .addTag(NotificationScheduler.TAG_TODAYS_SCHEDULE)
                 .build();
 
-        // Reading 3 — 20 minutes after lecture starts
+        // Reading 3 — 5 minutes after reading 2 finishes (total ~20m)
         OneTimeWorkRequest reading3 = new OneTimeWorkRequest.Builder(LocationReadingWorker.class)
-                .setInitialDelay(20, TimeUnit.MINUTES)
+                .setInitialDelay(5, TimeUnit.MINUTES)
                 .setInputData(locationData.putInt("reading_index", 3).build())
                 .addTag(NotificationScheduler.TAG_TODAYS_SCHEDULE)
                 .build();

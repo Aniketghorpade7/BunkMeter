@@ -55,7 +55,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
         holder.heatmapRecycler.setLayoutManager(
                 new GridLayoutManager(
                         holder.itemView.getContext(),
-                        5,
+                        6,
                         RecyclerView.HORIZONTAL,
                         false
                 )
@@ -78,8 +78,48 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
             Collections.sort(list, Comparator.comparing(Attendance::getDate));
 
             List<Integer> gridData = new ArrayList<>();
-            for (Attendance a : list) {
-                gridData.add(a.getStatus() == 1 ? 1 : -1);
+            if (!list.isEmpty()) {
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    
+                    Map<String, Integer> attendanceMap = new HashMap<>();
+                    for (Attendance a : list) {
+                        attendanceMap.put(a.getDate(), a.getStatus());
+                    }
+
+                    Date firstDate = sdf.parse(list.get(0).getDate());
+                    
+                    Calendar startCal = Calendar.getInstance();
+                    startCal.setTime(firstDate);
+                    while (startCal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+                        startCal.add(Calendar.DATE, -1);
+                    }
+
+                    Calendar endCal = Calendar.getInstance(); // Current date limits the ending to this week visually gracefully!
+                    while (endCal.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY) {
+                        endCal.add(Calendar.DATE, 1);
+                    }
+
+                    Calendar currentCal = (Calendar) startCal.clone();
+
+                    while (!currentCal.after(endCal)) {
+                        int dayOfWeek = currentCal.get(Calendar.DAY_OF_WEEK);
+                        if (dayOfWeek != Calendar.SUNDAY) {
+                            String dateStr = sdf.format(currentCal.getTime());
+                            if (attendanceMap.containsKey(dateStr)) {
+                                int status = attendanceMap.get(dateStr);
+                                if (status == 1) gridData.add(1);
+                                else if (status == 0) gridData.add(-1);
+                                else gridData.add(0);
+                            } else {
+                                gridData.add(0);
+                            }
+                        }
+                        currentCal.add(Calendar.DATE, 1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             // Send everything back to the UI thread
@@ -90,6 +130,31 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
 
                 // 2. Update Heatmap Recycler
                 holder.heatmapRecycler.setAdapter(new HeatmapAdapter(gridData));
+
+                // Setup pie chart
+                holder.pieChart.getDescription().setEnabled(false);
+                holder.pieChart.getLegend().setEnabled(false);
+                holder.pieChart.setHoleRadius(40f);
+                holder.pieChart.setTransparentCircleRadius(0f);
+                holder.pieChart.setDrawEntryLabels(false);
+                holder.pieChart.setTouchEnabled(false);
+                
+                if (total > 0) {
+                    List<com.github.mikephil.charting.data.PieEntry> pieEntries = new ArrayList<>();
+                    pieEntries.add(new com.github.mikephil.charting.data.PieEntry((float)present, "Present"));
+                    pieEntries.add(new com.github.mikephil.charting.data.PieEntry((float)(total-present), "Absent"));
+                    com.github.mikephil.charting.data.PieDataSet dataSet = new com.github.mikephil.charting.data.PieDataSet(pieEntries, "");
+                    int colorPresent = android.graphics.Color.parseColor("#4CAF50");
+                    int colorAbsent = android.graphics.Color.parseColor("#F44336");
+                    dataSet.setColors(colorPresent, colorAbsent);
+                    dataSet.setDrawValues(false); 
+                    holder.pieChart.setData(new com.github.mikephil.charting.data.PieData(dataSet));
+                    holder.pieChart.setVisibility(View.VISIBLE);
+                    holder.pieChart.invalidate();
+                } else {
+                    holder.pieChart.setVisibility(View.INVISIBLE);
+                    holder.pieChart.clear();
+                }
 
                 // 3. Clear month container (You can rebuild your month label logic here if needed)
                 holder.monthContainer.removeAllViews();
@@ -106,6 +171,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
         TextView subjectName, tvPercentage;
         RecyclerView heatmapRecycler;
         LinearLayout monthContainer;
+        com.github.mikephil.charting.charts.PieChart pieChart;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -114,6 +180,7 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
             tvPercentage = itemView.findViewById(R.id.tvPercentage);
             heatmapRecycler = itemView.findViewById(R.id.heatmapRecycler);
             monthContainer = itemView.findViewById(R.id.monthContainer);
+            pieChart = itemView.findViewById(R.id.pieChart);
         }
     }
 

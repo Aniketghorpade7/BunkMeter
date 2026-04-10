@@ -38,7 +38,7 @@ public class Attendance
 
     private int status; // (0=absent, 1=present)
 
-    private int classroomId;
+    private Integer classroomId;
 
     private boolean locationVerified;
 
@@ -67,7 +67,7 @@ public class Attendance
         return status;
     }
 
-    public int getClassroomId() {
+    public Integer getClassroomId() {
         return classroomId;
     }
 
@@ -100,7 +100,7 @@ public class Attendance
         this.status = status;
     }
 
-    public void setClassroomId(int classroomId) {
+    public void setClassroomId(Integer classroomId) {
         this.classroomId = classroomId;
     }
 

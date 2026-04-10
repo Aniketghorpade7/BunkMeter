@@ -1,5 +1,6 @@
 package com.bunkmeter.app.database;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
@@ -45,4 +46,16 @@ public interface AttendanceDao
 
     @Query("SELECT * FROM Attendance WHERE date = :date")
     List<Attendance> getAttendanceForDate(String date);
+
+    // Reactive query for the Home Screen to observe live changes (MVVM)
+    @Query("SELECT * FROM Attendance WHERE date = :date")
+    LiveData<List<Attendance>> getLiveAttendanceForDate(String date);
+
+    // Update status directly from Notification actions
+    @Query("UPDATE Attendance SET status = :status WHERE subjectId = :subjectId AND date = :date AND startTime = :startTime")
+    void updateAttendanceStatus(int subjectId, String date, int startTime, int status);
+
+    // Reactive query for the Subject Screen
+    @Query("SELECT * FROM Attendance WHERE subjectId = :subjectId ORDER BY date DESC, startTime DESC")
+    androidx.lifecycle.LiveData<java.util.List<Attendance>> getLiveAttendanceBySubject(int subjectId);
 }

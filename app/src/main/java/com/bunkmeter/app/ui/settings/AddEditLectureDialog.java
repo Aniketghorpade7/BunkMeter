@@ -23,6 +23,7 @@ import com.bunkmeter.app.model.Attendance;
 import com.bunkmeter.app.model.Classroom;
 import com.bunkmeter.app.model.Subject;
 import com.bunkmeter.app.model.Timetable;
+import com.bunkmeter.app.notifications.AttendanceNotificationHelper;
 import com.bunkmeter.app.repository.ClassroomRepository;
 import com.bunkmeter.app.repository.SubjectRepository;
 import com.bunkmeter.app.repository.TimetableRepository;
@@ -135,6 +136,7 @@ public class AddEditLectureDialog extends Dialog {
                 extra.setStatus(2); // PENDING
 
                 AppDatabase.getInstance(context).attendanceDao().insertAttendance(extra);
+                com.bunkmeter.app.scheduler.NotificationScheduler.rescheduleTodaysScheduleNow(context);
 
                 ((Activity) context).runOnUiThread(() -> {
                     dismiss();
@@ -205,7 +207,14 @@ public class AddEditLectureDialog extends Dialog {
         Timetable t = new Timetable(subjectId, day, startTime, endTime, classroomId, "Lecture");
         if (existing != null) timetableRepo.delete(existing);
         timetableRepo.insert(t);
-        ((Activity) context).runOnUiThread(() -> { dismiss(); refresh.run(); });
+        ((Activity) context).runOnUiThread(() -> {
+            dismiss();
+            refresh.run();
+            // Notify user to create a classroom if none was assigned to this timetable slot
+            if (classroomId == null) {
+                AttendanceNotificationHelper.triggerCreateClassroomNotification(context);
+            }
+        });
     }
 
     private void deleteTimetable() {

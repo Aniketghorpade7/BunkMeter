@@ -11,25 +11,33 @@ import java.util.List;
 public class TimetableRepository {
 
     private final TimetableDao timetableDao;
+    private final Application application;
 
     public TimetableRepository(Application application) {
+        this.application = application;
         AppDatabase db = AppDatabase.getInstance(application);
         timetableDao = db.timetableDao();
     }
 
     public void insert(Timetable timetable) {
-        AppDatabase.databaseWriteExecutor.execute(() ->
-                timetableDao.insertTimetable(timetable));
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            timetableDao.insertTimetable(timetable);
+            com.bunkmeter.app.scheduler.NotificationScheduler.rescheduleTodaysScheduleNow(application);
+        });
     }
 
     public void update(Timetable timetable) {
-        AppDatabase.databaseWriteExecutor.execute(() ->
-                timetableDao.updateTimetable(timetable));
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            timetableDao.updateTimetable(timetable);
+            com.bunkmeter.app.scheduler.NotificationScheduler.rescheduleTodaysScheduleNow(application);
+        });
     }
 
     public void delete(Timetable timetable) {
-        AppDatabase.databaseWriteExecutor.execute(() ->
-                timetableDao.deleteTimetable(timetable));
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            timetableDao.deleteTimetable(timetable);
+            com.bunkmeter.app.scheduler.NotificationScheduler.rescheduleTodaysScheduleNow(application);
+        });
     }
 
     public List<Timetable> getFullTimetable() {
@@ -53,6 +61,7 @@ public class TimetableRepository {
                     timetable.getEndTime()
             );
             timetableDao.insertTimetable(timetable);
+            com.bunkmeter.app.scheduler.NotificationScheduler.rescheduleTodaysScheduleNow(application);
         });
     }
 }

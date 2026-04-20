@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData;
 import com.bunkmeter.app.database.AttendanceDao;
 import com.bunkmeter.app.database.AppDatabase;
 import com.bunkmeter.app.model.Attendance;
+import com.bunkmeter.app.model.AttendanceStatus;
 import java.util.List;
 
 public class AttendanceRepository {
@@ -45,7 +46,8 @@ public class AttendanceRepository {
     }
 
     // Used by BroadcastReceiver and HomeFragment to mark Attendance
-    public void updateAttendanceStatus(int subjectId, String date, int startTime, int classroomId, int status) {
+    public void updateAttendanceStatus(int subjectId, String date, int startTime,
+                                        int classroomId, int status) {
         // Use your existing databaseWriteExecutor!
         AppDatabase.databaseWriteExecutor.execute(() -> {
             Attendance existing = attendanceDao.getSpecificAttendance(subjectId, date, startTime);
@@ -58,7 +60,7 @@ public class AttendanceRepository {
                 newAttendance.setStartTime(startTime);
                 newAttendance.setStatus(status);
                 newAttendance.setLocationVerified(false);
-                
+
                 // If classroomId is not provided, try to find it from Timetable
                 if (classroomId <= 0) {
                     try {
@@ -67,17 +69,18 @@ public class AttendanceRepository {
                         java.util.Calendar cal = java.util.Calendar.getInstance();
                         cal.setTime(d);
                         int dayOfWeekInput = cal.get(java.util.Calendar.DAY_OF_WEEK);
-                        
+
                         // Map to our 0=Mon convention
                         int mappedDay = -1;
-                        if (dayOfWeekInput == java.util.Calendar.MONDAY) mappedDay = 0;
-                        else if (dayOfWeekInput == java.util.Calendar.TUESDAY) mappedDay = 1;
+                        if (dayOfWeekInput == java.util.Calendar.MONDAY)    mappedDay = 0;
+                        else if (dayOfWeekInput == java.util.Calendar.TUESDAY)   mappedDay = 1;
                         else if (dayOfWeekInput == java.util.Calendar.WEDNESDAY) mappedDay = 2;
-                        else if (dayOfWeekInput == java.util.Calendar.THURSDAY) mappedDay = 3;
-                        else if (dayOfWeekInput == java.util.Calendar.FRIDAY) mappedDay = 4;
+                        else if (dayOfWeekInput == java.util.Calendar.THURSDAY)  mappedDay = 3;
+                        else if (dayOfWeekInput == java.util.Calendar.FRIDAY)    mappedDay = 4;
 
                         if (mappedDay != -1) {
-                            com.bunkmeter.app.model.Timetable t = timetableDao.getTimetableForSubjectAndTimeSync(subjectId, mappedDay, startTime);
+                            com.bunkmeter.app.model.Timetable t =
+                                    timetableDao.getTimetableForSubjectAndTimeSync(subjectId, mappedDay, startTime);
                             if (t != null && t.getClassroomId() != null) {
                                 newAttendance.setClassroomId(t.getClassroomId());
                             }
@@ -89,12 +92,19 @@ public class AttendanceRepository {
                     newAttendance.setClassroomId(classroomId);
                 }
 
-                // If still no valid classroomId (e.g. extra lecture), this might still fail if schema requires it.
-                // However, most entries should have it. 
-                // We assume there's at least one default classroom if needed, or we just try to insert.
                 attendanceDao.insertAttendance(newAttendance);
             }
         });
+    }
+
+    /**
+     * Typed overload — preferred for new code.  Translates the enum to its raw
+     * integer value and delegates to the existing int-based implementation so
+     * there is a single insert/update code-path.
+     */
+    public void updateAttendanceStatus(int subjectId, String date, int startTime,
+                                        int classroomId, AttendanceStatus status) {
+        updateAttendanceStatus(subjectId, date, startTime, classroomId, status.value);
     }
 
     public Attendance getSpecificAttendanceSync(int subjectId, String date, int startTime) {

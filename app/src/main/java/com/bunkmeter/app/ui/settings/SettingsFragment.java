@@ -21,6 +21,8 @@ import com.bunkmeter.app.repository.ResetRepository;
 import com.bunkmeter.app.ui.main.MainActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import java.io.File;
 
 public class SettingsFragment extends Fragment {
@@ -203,10 +205,30 @@ public class SettingsFragment extends Fragment {
         }
     }
 
+    private BroadcastReceiver profileUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Reload profile data (including image) when broadcast is received
+            loadProfileData();
+        }
+    };
+
     @Override
     public void onResume() {
         super.onResume();
-        loadProfileData();
+        // Register for profile update broadcasts
+        IntentFilter filter = new IntentFilter("com.bunkmeter.app.ACTION_PROFILE_UPDATED");
+        requireContext().registerReceiver(profileUpdateReceiver, filter);
+        loadProfileData(); // Ensure data is fresh when fragment becomes visible
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Unregister to avoid leaks
+        try {
+            requireContext().unregisterReceiver(profileUpdateReceiver);
+        } catch (IllegalArgumentException ignored) {}
     }
 
     // ================= IMAGE PREVIEW =================

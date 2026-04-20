@@ -199,7 +199,7 @@ public class SettingsFragment extends Fragment {
                 idCardImage.setImageURI(Uri.fromFile(imgFile));
             }
         } else {
-            idCardImage.setImageResource(R.drawable.ic_profile_placeholder);
+            idCardImage.setImageResource(R.drawable.ic_id_card_placeholder);
         }
     }
 

@@ -35,7 +35,7 @@
                     android:layout_height="260dp"
                     android:layout_gravity="center"
                     android:scaleType="centerCrop"
-                    android:background="@drawable/card_bg"
+                    android:background="@drawable/rounded_image_bg"
                     android:src="@drawable/ic_id_card_placeholder"/>
 
                 <TextView

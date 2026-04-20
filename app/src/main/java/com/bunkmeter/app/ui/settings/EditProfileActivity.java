@@ -191,11 +191,18 @@ public class EditProfileActivity extends AppCompatActivity {
         editor.putString("prn", prn);
         editor.putString("dept", dept);
         editor.putString("sem", sem);
+        // Preserve existing image if none selected
+        String existingImagePath = prefs.getString("image", "");
+        if (imagePath.isEmpty()) {
+            imagePath = existingImagePath;
+        }
         editor.putString("image", imagePath);
 
         editor.apply();
 
-        Toast.makeText(this, "Profile Saved", Toast.LENGTH_SHORT).show();
+        // Notify other components that profile (including image) was updated
+        Intent broadcast = new Intent("com.bunkmeter.app.ACTION_PROFILE_UPDATED");
+        sendBroadcast(broadcast);
         finish();
     }
 

@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
 
     <!--  Storage permissions  -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>.
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <!--  Location permissions  -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -24,10 +24,10 @@
     <!--  for background app permission  -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
 
     <application
-        android:name="BunkMeterApp"
+        android:name=".BunkMeterApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
@@ -67,8 +67,8 @@
 
         <service
             android:name=".service.AttendanceForegroundService"
-            android:foregroundServiceType="location|dataSync"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="shortService" />
 
         <receiver
             android:name=".receiver.AttendanceActionReceiver"

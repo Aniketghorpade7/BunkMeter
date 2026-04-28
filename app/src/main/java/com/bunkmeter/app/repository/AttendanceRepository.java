@@ -40,15 +40,12 @@ public class AttendanceRepository {
         return attendanceDao.getAbsentClasses(subjectId);
     }
 
-    // Used by UI (HomeViewModel)
     public LiveData<List<Attendance>> getLiveAttendanceForDate(String date) {
         return attendanceDao.getLiveAttendanceForDate(date);
     }
 
-    // Used by BroadcastReceiver and HomeFragment to mark Attendance
     public void updateAttendanceStatus(int subjectId, String date, int startTime,
-                                        int classroomId, int status) {
-        // Use your existing databaseWriteExecutor!
+                                       int classroomId, int status) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             Attendance existing = attendanceDao.getSpecificAttendance(subjectId, date, startTime);
             if (existing != null) {
@@ -64,19 +61,16 @@ public class AttendanceRepository {
                 // If classroomId is not provided, try to find it from Timetable
                 if (classroomId <= 0) {
                     try {
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
-                        java.util.Date d = sdf.parse(date);
-                        java.util.Calendar cal = java.util.Calendar.getInstance();
-                        cal.setTime(d);
-                        int dayOfWeekInput = cal.get(java.util.Calendar.DAY_OF_WEEK);
+                        java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+                        int dayOfWeekInput = localDate.getDayOfWeek().getValue(); // 1=Mon ... 7=Sun
 
                         // Map to our 0=Mon convention
                         int mappedDay = -1;
-                        if (dayOfWeekInput == java.util.Calendar.MONDAY)    mappedDay = 0;
-                        else if (dayOfWeekInput == java.util.Calendar.TUESDAY)   mappedDay = 1;
-                        else if (dayOfWeekInput == java.util.Calendar.WEDNESDAY) mappedDay = 2;
-                        else if (dayOfWeekInput == java.util.Calendar.THURSDAY)  mappedDay = 3;
-                        else if (dayOfWeekInput == java.util.Calendar.FRIDAY)    mappedDay = 4;
+                        if (dayOfWeekInput == 1) mappedDay = 0; // MONDAY
+                        else if (dayOfWeekInput == 2) mappedDay = 1; // TUESDAY
+                        else if (dayOfWeekInput == 3) mappedDay = 2; // WEDNESDAY
+                        else if (dayOfWeekInput == 4) mappedDay = 3; // THURSDAY
+                        else if (dayOfWeekInput == 5) mappedDay = 4; // FRIDAY
 
                         if (mappedDay != -1) {
                             com.bunkmeter.app.model.Timetable t =
@@ -97,13 +91,8 @@ public class AttendanceRepository {
         });
     }
 
-    /**
-     * Typed overload — preferred for new code.  Translates the enum to its raw
-     * integer value and delegates to the existing int-based implementation so
-     * there is a single insert/update code-path.
-     */
     public void updateAttendanceStatus(int subjectId, String date, int startTime,
-                                        int classroomId, AttendanceStatus status) {
+                                       int classroomId, AttendanceStatus status) {
         updateAttendanceStatus(subjectId, date, startTime, classroomId, status.value);
     }
 

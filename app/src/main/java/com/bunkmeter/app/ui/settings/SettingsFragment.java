@@ -21,8 +21,6 @@ import com.bunkmeter.app.repository.ResetRepository;
 import com.bunkmeter.app.ui.main.MainActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
 import java.io.File;
 
 public class SettingsFragment extends Fragment {
@@ -198,6 +196,8 @@ public class SettingsFragment extends Fragment {
         if (!imagePath.isEmpty()) {
             File imgFile = new File(imagePath);
             if (imgFile.exists()) {
+                // Clear the ImageView's cache so it forces a redraw of the new profile.jpg
+                idCardImage.setImageURI(null);
                 idCardImage.setImageURI(Uri.fromFile(imgFile));
             }
         } else {
@@ -205,30 +205,18 @@ public class SettingsFragment extends Fragment {
         }
     }
 
-    private BroadcastReceiver profileUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Reload profile data (including image) when broadcast is received
-            loadProfileData();
-        }
-    };
-
     @Override
     public void onResume() {
         super.onResume();
-        // Register for profile update broadcasts
-        IntentFilter filter = new IntentFilter("com.bunkmeter.app.ACTION_PROFILE_UPDATED");
-        requireContext().registerReceiver(profileUpdateReceiver, filter);
-        loadProfileData(); // Ensure data is fresh when fragment becomes visible
+        // The fragment naturally resumes when EditProfileActivity closes.
+        // No BroadcastReceiver needed! Just load the fresh data.
+        loadProfileData();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        // Unregister to avoid leaks
-        try {
-            requireContext().unregisterReceiver(profileUpdateReceiver);
-        } catch (IllegalArgumentException ignored) {}
+        // Receiver unregistration removed to keep things clean and prevent crashes
     }
 
     // ================= IMAGE PREVIEW =================

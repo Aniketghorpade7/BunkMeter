@@ -62,12 +62,16 @@ public class LocationHelper {
                 LocationServices.getFusedLocationProviderClient(context);
         CancellationTokenSource cts = new CancellationTokenSource();
 
-        fusedClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.getToken())
-                .addOnSuccessListener(location -> callback.onResult(location))
-                .addOnFailureListener(e -> {
-                    cts.cancel();
-                    callback.onResult(null);
-                });
+        try {
+            fusedClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.getToken())
+                    .addOnSuccessListener(location -> callback.onResult(location))
+                    .addOnFailureListener(e -> {
+                        cts.cancel();
+                        callback.onResult(null);
+                    });
+        } catch (SecurityException e) {
+            callback.onResult(null); // Permission was revoked! Fail gracefully.
+        }
     }
 
     // -------------------------------------------------------------------------

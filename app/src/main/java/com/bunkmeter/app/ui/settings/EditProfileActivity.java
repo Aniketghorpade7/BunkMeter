@@ -200,9 +200,6 @@ public class EditProfileActivity extends AppCompatActivity {
 
         editor.apply();
 
-        // Notify other components that profile (including image) was updated
-        Intent broadcast = new Intent("com.bunkmeter.app.ACTION_PROFILE_UPDATED");
-        sendBroadcast(broadcast);
         finish();
     }
 

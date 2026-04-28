@@ -69,4 +69,6 @@ dependencies {
 
     // For PieCharts
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    implementation 'androidx.concurrent:concurrent-futures:1.1.0'
 }

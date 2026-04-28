@@ -187,4 +187,46 @@ public class AttendanceNotificationHelper {
             nm.createNotificationChannel(channel);
         }
     }
+
+    // Add this variable near your other CHANNEL constants at the top
+    private static final String CHANNEL_ACTIVE_LECTURE = "active_lecture_channel";
+
+    // Add this new method into the class
+    public static void triggerActiveLectureNotification(Context context,
+                                                        int subjectId,
+                                                        String date,
+                                                        int startTime,
+                                                        int sessionId,
+                                                        long durationMillis) {
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm == null) return;
+
+        ensureChannel(nm, CHANNEL_ACTIVE_LECTURE, "Active Lecture Check-in", NotificationManager.IMPORTANCE_DEFAULT);
+
+        // Unique ID for this specific lecture's active prompt
+        int notifId = Objects.hash("active", subjectId, date, startTime);
+
+        // Build the 3 actions
+        Intent yesIntent = buildActionIntent(context, "ACTION_PRESENT", subjectId, date, startTime, notifId, sessionId);
+        PendingIntent piYes = PendingIntent.getBroadcast(context, notifId, yesIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        Intent noIntent = buildActionIntent(context, "ACTION_BUNK", subjectId, date, startTime, notifId, sessionId);
+        PendingIntent piNo = PendingIntent.getBroadcast(context, notifId + 1, noIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        Intent cancelIntent = buildActionIntent(context, "ACTION_CANCEL", subjectId, date, startTime, notifId, sessionId);
+        PendingIntent piCancel = PendingIntent.getBroadcast(context, notifId + 2, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ACTIVE_LECTURE)
+                .setSmallIcon(android.R.drawable.ic_dialog_map)
+                .setContentTitle("Lecture Time! 🎓")
+                .setContentText("Are you in class? (We won't tell if you're sleeping in 🤫)")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT) // Sits quietly in the tray
+                .setOngoing(true) // Cannot be easily swiped away
+                .setTimeoutAfter(durationMillis) // Magically vanishes when the lecture ends!
+                .addAction(android.R.drawable.checkbox_on_background, "Present 🙋‍♂️", piYes)
+                .addAction(android.R.drawable.ic_delete, "Bunking 🥷", piNo)
+                .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel ❌", piCancel);
+
+        nm.notify(notifId, builder.build());
+    }
 }

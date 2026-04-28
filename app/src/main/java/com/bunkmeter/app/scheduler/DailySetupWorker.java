@@ -11,6 +11,7 @@ import com.bunkmeter.app.database.AppDatabase;
 import com.bunkmeter.app.model.Classroom;
 import com.bunkmeter.app.model.Timetable;
 import com.bunkmeter.app.notifications.AttendanceNotificationHelper;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -28,38 +29,30 @@ public class DailySetupWorker extends Worker {
     @Override
     public Result doWork() {
         Calendar calendar = Calendar.getInstance();
-        int todayDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK); // Sunday=1, Monday=2...
-        String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        int currentMins = (calendar.get(Calendar.HOUR_OF_DAY) * 60) + calendar.get(Calendar.MINUTE);
+
+        String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.getTime());
+
+        int mappedDay = getMappedDay(currentDayOfWeek);
 
         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-        List<Timetable> todaysLectures = db.timetableDao().getTimetableAndExtraForDaySync(todayDayOfWeek, todayDate);
-
         WorkManager workManager = WorkManager.getInstance(getApplicationContext());
 
-        // 1. GREETING NOTIFICATION LOGIC
-        long greetingDelayMinutes;
-        if (todaysLectures.isEmpty()) {
-            // No lectures? Schedule greeting for 8:45 AM (105 mins from 7:00 AM)
-            greetingDelayMinutes = 105;
-        } else {
-            // First lecture minus 30 mins
-            int firstLectureStartMinutes = todaysLectures.get(0).getStartTime();
-            int currentMinutesFromMidnight = 7 * 60; // 7:00 AM
-            greetingDelayMinutes = (firstLectureStartMinutes - 30) - currentMinutesFromMidnight;
-            if (greetingDelayMinutes < 0) greetingDelayMinutes = 0;
+        if (mappedDay == -1) {
+            scheduleGreeting(workManager, 0, currentMins, 0);
+            return Result.success();
         }
 
-        Data greetingData = new Data.Builder().putInt("lecture_count", todaysLectures.size()).build();
-        OneTimeWorkRequest greetingRequest = new OneTimeWorkRequest.Builder(GreetingWorker.class)
-                .setInitialDelay(greetingDelayMinutes, TimeUnit.MINUTES)
-                .setInputData(greetingData)
-                .addTag(NotificationScheduler.TAG_TODAYS_SCHEDULE)
-                .build();
-        workManager.enqueue(greetingRequest);
+        List<Timetable> todaysLectures = db.timetableDao().getTimetableAndExtraForDaySync(mappedDay, todayDate);
 
-        // 2. LECTURE-SPECIFIC NOTIFICATIONS + LOCATION CHECKS
-        int currentMins = 7 * 60; // Workers are enqueued at 7:00 AM
-        boolean missingClassroom = false; // tracks if any lecture has no classroom assigned
+        if (todaysLectures.isEmpty()) {
+            scheduleGreeting(workManager, 0, currentMins, 0);
+        } else {
+            scheduleGreeting(workManager, todaysLectures.size(), currentMins, todaysLectures.get(0).getStartTime());
+        }
+
+        boolean missingClassroom = false;
 
         for (Timetable lecture : todaysLectures) {
             long preLectureDelay  = (lecture.getStartTime() - 10) - currentMins;
@@ -71,7 +64,6 @@ public class DailySetupWorker extends Worker {
                     .putString("date", todayDate)
                     .build();
 
-            // 10 Mins Before — heads-up notification
             if (preLectureDelay > 0) {
                 OneTimeWorkRequest preReq = new OneTimeWorkRequest.Builder(PreLectureWorker.class)
                         .setInitialDelay(preLectureDelay, TimeUnit.MINUTES)
@@ -81,7 +73,6 @@ public class DailySetupWorker extends Worker {
                 workManager.enqueue(preReq);
             }
 
-            // 30 Mins After — checks if attendance was already marked, or starts foreground prompt
             if (ongoingLectureDelay > 0) {
                 OneTimeWorkRequest ongoingReq = new OneTimeWorkRequest.Builder(OngoingLectureWorker.class)
                         .setInitialDelay(ongoingLectureDelay, TimeUnit.MINUTES)
@@ -91,19 +82,15 @@ public class DailySetupWorker extends Worker {
                 workManager.enqueue(ongoingReq);
             }
 
-            // 3. LOCATION-BASED AUTO ATTENDANCE
-            // Only schedule if this lecture has a classroom with GPS coordinates set
             Integer classroomId = lecture.getClassroomId();
             if (classroomId != null) {
                 Classroom classroom = db.classroomDao().getClassroomById(classroomId);
                 if (classroom != null) {
-                    // Delay from now (7 AM) until the lecture starts
-                    long lectureStartDelay = lecture.getStartTime() - currentMins;
-                    if (lectureStartDelay > 0) {
-                        // Use timetableId as a stable lectureId so TempReadingStorage keys are unique
+                    long autoStartDelay = lecture.getStartTime() - currentMins; // Renamed to avoid conflict
+                    if (autoStartDelay > 0) {
                         long lectureId = lecture.getTimetableId();
                         if (lectureId == -1) {
-                             lectureId = -((long)lecture.getSubjectId() * 10000L + lecture.getStartTime());
+                            lectureId = -((long)lecture.getSubjectId() * 10000L + lecture.getStartTime());
                         }
                         AttendanceScheduler.scheduleAttendanceCheck(
                                 getApplicationContext(),
@@ -118,12 +105,33 @@ public class DailySetupWorker extends Worker {
                     }
                 }
             } else {
-                // Track that at least one lecture has no classroom assigned
                 missingClassroom = true;
+            }
+
+            // --- Interactive Lecture-Start Prompt ---
+            long interactivePromptDelay = lecture.getStartTime() - currentMins; // Renamed to avoid conflict
+
+            if (interactivePromptDelay >= 0) {
+                int sessionId = Math.abs(java.util.Objects.hash(lecture.getSubjectId(), todayDate, lecture.getStartTime()));
+                if (sessionId == 0) sessionId = 1;
+
+                Data startData = new Data.Builder()
+                        .putInt("subject_id", lecture.getSubjectId())
+                        .putInt("start_time", lecture.getStartTime())
+                        .putInt("end_time", lecture.getEndTime())
+                        .putString("date", todayDate)
+                        .putInt("session_id", sessionId)
+                        .build();
+
+                OneTimeWorkRequest startReq = new OneTimeWorkRequest.Builder(LectureStartWorker.class)
+                        .setInitialDelay(interactivePromptDelay, TimeUnit.MINUTES)
+                        .setInputData(startData)
+                        .addTag(NotificationScheduler.TAG_TODAYS_SCHEDULE)
+                        .build();
+                workManager.enqueue(startReq);
             }
         }
 
-        // Fire the create-classroom notification ONCE per day if any lecture had no classroom
         if (missingClassroom) {
             android.content.SharedPreferences prefs = getApplicationContext()
                     .getSharedPreferences("bunkmeter_prefs", android.content.Context.MODE_PRIVATE);
@@ -135,5 +143,40 @@ public class DailySetupWorker extends Worker {
         }
 
         return Result.success();
+    }
+
+    private int getMappedDay(int currentDayOfWeek) {
+        if (currentDayOfWeek == Calendar.MONDAY)    return 0;
+        if (currentDayOfWeek == Calendar.TUESDAY)   return 1;
+        if (currentDayOfWeek == Calendar.WEDNESDAY) return 2;
+        if (currentDayOfWeek == Calendar.THURSDAY)  return 3;
+        if (currentDayOfWeek == Calendar.FRIDAY)    return 4;
+        if (currentDayOfWeek == Calendar.SATURDAY)  return 5;
+        return -1;
+    }
+
+    private void scheduleGreeting(WorkManager workManager, int lectureCount, int currentMins, int firstLectureStartMins) {
+        if (currentMins >= 12 * 60) return;
+
+        long greetingDelayMinutes;
+
+        if (lectureCount == 0) {
+            greetingDelayMinutes = 525 - currentMins;
+        } else {
+            greetingDelayMinutes = (firstLectureStartMins - 30) - currentMins;
+        }
+
+        if (greetingDelayMinutes < 0) {
+            greetingDelayMinutes = 0;
+        }
+
+        Data greetingData = new Data.Builder().putInt("lecture_count", lectureCount).build();
+        OneTimeWorkRequest greetingRequest = new OneTimeWorkRequest.Builder(GreetingWorker.class)
+                .setInitialDelay(greetingDelayMinutes, TimeUnit.MINUTES)
+                .setInputData(greetingData)
+                .addTag(NotificationScheduler.TAG_TODAYS_SCHEDULE)
+                .build();
+
+        workManager.enqueue(greetingRequest);
     }
 }

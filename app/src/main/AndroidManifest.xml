@@ -21,10 +21,8 @@
     <!-- Notification permission required on Android 13+ (API 33) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!--  for background app permission  -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
+    <!-- Needed to re-register geofences after the device reboots -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".BunkMeterApp"
@@ -65,15 +63,25 @@
             android:name=".ui.settings.ExportActivity"
             android:exported="false" />
 
-        <service
-            android:name=".service.AttendanceForegroundService"
-            android:exported="false"
-            android:foregroundServiceType="shortService" />
-
         <receiver
             android:name=".receiver.AttendanceActionReceiver"
             android:exported="false" />
 
+        <!-- Receives geofence ENTER events from the OS. Not exported: only the
+             system fires it via our own PendingIntent. -->
+        <receiver
+            android:name=".receiver.GeofenceBroadcastReceiver"
+            android:exported="false" />
+
+        <!-- Re-registers geofences after reboot. Must be exported so the system
+             can deliver BOOT_COMPLETED to it. -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

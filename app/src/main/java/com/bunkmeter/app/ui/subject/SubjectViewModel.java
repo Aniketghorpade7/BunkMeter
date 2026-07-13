@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import com.bunkmeter.app.model.Attendance;
+import com.bunkmeter.app.model.AttendanceStatus;
 import com.bunkmeter.app.repository.AttendanceRepository;
 
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class SubjectViewModel extends AndroidViewModel {
             if (!dailyMap.containsKey(date)) {
                 dailyMap.put(date, 0);
             }
-            if (a.getStatus() == Attendance.PRESENT) {
+            if (a.getAttendanceStatus() == AttendanceStatus.PRESENT) {
                 dailyMap.put(date, dailyMap.get(date) + 1);
             }
         }

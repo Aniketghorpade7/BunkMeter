@@ -135,7 +135,7 @@ public class TimetableActivity extends AppCompatActivity {
         float pixelsPerMinute = 1.5f * density;
 
         int timeColWidth = dpToPx(80);
-        int dayColWidth = dpToPx(110);
+        int dayColWidth = dpToPx(130);
         int headerHeight = dpToPx(40);
         String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
@@ -157,12 +157,19 @@ public class TimetableActivity extends AppCompatActivity {
         int totalMinutes = (endHour - startHour) * 60;
         int gridTotalPixelHeight = (int) (totalMinutes * pixelsPerMinute);
 
+        // Grid chrome colors from the M3 theme so they adapt to light/dark. The old
+        // 0xFF888888 labels / 0x1A000000 lines were washed out or invisible in dark mode.
+        int gridLabelColor = com.google.android.material.color.MaterialColors.getColor(
+                this, com.google.android.material.R.attr.colorOnSurfaceVariant, 0xFF888888);
+        int gridLineColor = com.google.android.material.color.MaterialColors.getColor(
+                this, com.google.android.material.R.attr.colorOutlineVariant, 0x1A000000);
+
         // --- 3. Draw Corner Header ---
         TextView tvCorner = new TextView(this);
         tvCorner.setText("Time");
         tvCorner.setGravity(android.view.Gravity.CENTER);
         tvCorner.setTypeface(null, android.graphics.Typeface.BOLD);
-        tvCorner.setTextColor(0xFF888888);
+        tvCorner.setTextColor(gridLabelColor);
         RelativeLayout.LayoutParams lpCorner = new RelativeLayout.LayoutParams(timeColWidth, headerHeight);
         timetableTimeBar.addView(tvCorner, lpCorner);
 
@@ -175,7 +182,7 @@ public class TimetableActivity extends AppCompatActivity {
             TextView tvTime = new TextView(this);
             tvTime.setText(formatTime(h * 60));
             tvTime.setTextSize(12);
-            tvTime.setTextColor(0xFF888888);
+            tvTime.setTextColor(gridLabelColor);
             tvTime.setGravity(android.view.Gravity.CENTER_HORIZONTAL | android.view.Gravity.TOP);
 
             RelativeLayout.LayoutParams lpTime = new RelativeLayout.LayoutParams(timeColWidth, RelativeLayout.LayoutParams.WRAP_CONTENT);
@@ -185,7 +192,7 @@ public class TimetableActivity extends AppCompatActivity {
 
             // Draw Horizontal Grid Line
             View hLine = new View(this);
-            hLine.setBackgroundColor(0x1A000000); // Faint line
+            hLine.setBackgroundColor(gridLineColor); // Faint line
             RelativeLayout.LayoutParams lpLine = new RelativeLayout.LayoutParams(days.length * dayColWidth, dpToPx(1));
             lpLine.topMargin = yPos;
             timetableGrid.addView(hLine, lpLine);
@@ -197,7 +204,7 @@ public class TimetableActivity extends AppCompatActivity {
 
             // Draw Vertical Grid Line
             View vLine = new View(this);
-            vLine.setBackgroundColor(0x1A000000);
+            vLine.setBackgroundColor(gridLineColor);
             RelativeLayout.LayoutParams lpVLine = new RelativeLayout.LayoutParams(dpToPx(1), headerHeight + gridTotalPixelHeight);
             lpVLine.leftMargin = xPos;
             timetableGrid.addView(vLine, lpVLine);
@@ -207,7 +214,7 @@ public class TimetableActivity extends AppCompatActivity {
             tvDay.setText(days[i]);
             tvDay.setTextSize(14);
             tvDay.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvDay.setTextColor(0xFF888888);
+            tvDay.setTextColor(gridLabelColor);
             tvDay.setGravity(android.view.Gravity.CENTER);
 
             RelativeLayout.LayoutParams lpDay = new RelativeLayout.LayoutParams(dayColWidth, headerHeight);

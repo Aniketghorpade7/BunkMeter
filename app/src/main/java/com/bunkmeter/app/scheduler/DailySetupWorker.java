@@ -8,9 +8,10 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 import com.bunkmeter.app.database.AppDatabase;
-import com.bunkmeter.app.model.Classroom;
 import com.bunkmeter.app.model.Timetable;
 import com.bunkmeter.app.notifications.AttendanceNotificationHelper;
+import com.bunkmeter.app.utils.AttendanceLogic;
+import com.bunkmeter.app.utils.DateUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -34,7 +35,7 @@ public class DailySetupWorker extends Worker {
 
         String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.getTime());
 
-        int mappedDay = getMappedDay(currentDayOfWeek);
+        int mappedDay = DateUtils.calendarToAppDay(currentDayOfWeek);
 
         AppDatabase db = AppDatabase.getInstance(getApplicationContext());
         WorkManager workManager = WorkManager.getInstance(getApplicationContext());
@@ -58,9 +59,16 @@ public class DailySetupWorker extends Worker {
             long preLectureDelay  = (lecture.getStartTime() - 10) - currentMins;
             long ongoingLectureDelay = (lecture.getStartTime() + 30) - currentMins;
 
+            // One deterministic session id per lecture, from the shared helper so
+            // it matches exactly what GeofenceBroadcastReceiver/AttendanceActionReceiver
+            // use to CANCEL these jobs. Used as the WorkManager tag SESSION_<id>.
+            int sessionId = AttendanceLogic.sessionId(lecture.getSubjectId(), todayDate, lecture.getStartTime());
+            String sessionTag = AttendanceLogic.sessionTag(lecture.getSubjectId(), todayDate, lecture.getStartTime());
+
             Data lectureData = new Data.Builder()
                     .putInt("subject_id", lecture.getSubjectId())
                     .putInt("start_time", lecture.getStartTime())
+                    .putInt("end_time", lecture.getEndTime())
                     .putString("date", todayDate)
                     .build();
 
@@ -78,43 +86,38 @@ public class DailySetupWorker extends Worker {
                         .setInitialDelay(ongoingLectureDelay, TimeUnit.MINUTES)
                         .setInputData(lectureData)
                         .addTag(NotificationScheduler.TAG_TODAYS_SCHEDULE)
+                        .addTag(sessionTag)
                         .build();
                 workManager.enqueue(ongoingReq);
             }
 
-            Integer classroomId = lecture.getClassroomId();
-            if (classroomId != null) {
-                Classroom classroom = db.classroomDao().getClassroomById(classroomId);
-                if (classroom != null) {
-                    long autoStartDelay = lecture.getStartTime() - currentMins; // Renamed to avoid conflict
-                    if (autoStartDelay > 0) {
-                        long lectureId = lecture.getTimetableId();
-                        if (lectureId == -1) {
-                            lectureId = -((long)lecture.getSubjectId() * 10000L + lecture.getStartTime());
-                        }
-                        AttendanceScheduler.scheduleAttendanceCheck(
-                                getApplicationContext(),
-                                lectureId,
-                                lecture.getSubjectId(),
-                                todayDate,
-                                lecture.getStartTime(),
-                                classroom.getLatitude(),
-                                classroom.getLongitude(),
-                                classroom.getRadius()
-                        );
-                    }
-                }
-            } else {
+            // A subject with no classroom can't be auto-tracked by geofencing,
+            // so flag it and prompt the user to assign one. (Automatic attendance
+            // itself is now handled entirely by the OS geofence registered in
+            // GeofenceManager — no per-lecture GPS jobs are scheduled here.)
+            if (lecture.getClassroomId() == null) {
                 missingClassroom = true;
             }
 
+            // Auto-bunk safety net: if the lecture is STILL "Pending" by the time it
+            // ends, AutoBunkWorker records a BUNK so the stat isn't left dangling.
+            // It shares the sessionTag, so it's cancelled the moment the student is
+            // marked present (geofence) or taps a notification button.
+            long autoBunkDelay = lecture.getEndTime() - currentMins;
+            if (autoBunkDelay > 0) {
+                OneTimeWorkRequest autoBunkReq = new OneTimeWorkRequest.Builder(AutoBunkWorker.class)
+                        .setInitialDelay(autoBunkDelay, TimeUnit.MINUTES)
+                        .setInputData(lectureData)
+                        .addTag(NotificationScheduler.TAG_TODAYS_SCHEDULE)
+                        .addTag(sessionTag)
+                        .build();
+                workManager.enqueue(autoBunkReq);
+            }
+
             // --- Interactive Lecture-Start Prompt ---
-            long interactivePromptDelay = lecture.getStartTime() - currentMins; // Renamed to avoid conflict
+            long interactivePromptDelay = lecture.getStartTime() - currentMins;
 
             if (interactivePromptDelay >= 0) {
-                int sessionId = Math.abs(java.util.Objects.hash(lecture.getSubjectId(), todayDate, lecture.getStartTime()));
-                if (sessionId == 0) sessionId = 1;
-
                 Data startData = new Data.Builder()
                         .putInt("subject_id", lecture.getSubjectId())
                         .putInt("start_time", lecture.getStartTime())
@@ -143,16 +146,6 @@ public class DailySetupWorker extends Worker {
         }
 
         return Result.success();
-    }
-
-    private int getMappedDay(int currentDayOfWeek) {
-        if (currentDayOfWeek == Calendar.MONDAY)    return 0;
-        if (currentDayOfWeek == Calendar.TUESDAY)   return 1;
-        if (currentDayOfWeek == Calendar.WEDNESDAY) return 2;
-        if (currentDayOfWeek == Calendar.THURSDAY)  return 3;
-        if (currentDayOfWeek == Calendar.FRIDAY)    return 4;
-        if (currentDayOfWeek == Calendar.SATURDAY)  return 5;
-        return -1;
     }
 
     private void scheduleGreeting(WorkManager workManager, int lectureCount, int currentMins, int firstLectureStartMins) {

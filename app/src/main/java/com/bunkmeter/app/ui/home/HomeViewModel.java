@@ -1,6 +1,9 @@
 package com.bunkmeter.app.ui.home;
 
 import android.app.Application;
+import android.app.NotificationManager;
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
@@ -9,12 +12,10 @@ import com.bunkmeter.app.database.AppDatabase;
 import com.bunkmeter.app.model.HomeLectureItem;
 import com.bunkmeter.app.notifications.AttendanceNotificationHelper;
 import com.bunkmeter.app.repository.AttendanceRepository;
+import com.bunkmeter.app.utils.AttendanceLogic;
+import com.bunkmeter.app.utils.DateUtils;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class HomeViewModel extends AndroidViewModel {
 
@@ -26,19 +27,22 @@ public class HomeViewModel extends AndroidViewModel {
         super(application);
         attendanceRepo = new AttendanceRepository(application);
 
-        todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        todayDate = DateUtils.todayDateString();
 
-        Calendar calendar = Calendar.getInstance();
-        int mappedDay = getMappedDay(calendar.get(Calendar.DAY_OF_WEEK));
+        // Day mapping now comes from the shared DateUtils, which correctly
+        // includes Saturday (= 5). The old private copy here returned -1 for
+        // Saturday, so Saturday lectures never showed on the Home screen even
+        // though the background workers fired. (Bug #1 fixed.)
+        int mappedDay = DateUtils.todayAppDay();
 
         AppDatabase db = AppDatabase.getInstance(application);
 
-        // Use Room's reactive JOIN query — the UI will auto-update whenever
-        // any Attendance, Subject, or Classroom row changes. No manual refresh needed.
-        if (mappedDay != -1) {
+        // Room's reactive JOIN query — the UI auto-updates whenever any
+        // Attendance, Subject, or Classroom row changes. No manual refresh needed.
+        if (mappedDay != DateUtils.SUNDAY_NO_LECTURES) {
             todaysLectures = db.timetableDao().getTodaysLecturesLive(mappedDay, todayDate);
         } else {
-            // Weekend — no lectures
+            // Sunday — no lectures
             todaysLectures = new androidx.lifecycle.MutableLiveData<>(new java.util.ArrayList<>());
         }
     }
@@ -52,31 +56,35 @@ public class HomeViewModel extends AndroidViewModel {
     }
 
     /**
-     * Called from UI when a button is clicked.
-     * Room will automatically emit a new LiveData value, updating the UI list.
-     * If the subject has no classroom assigned, we also fire a notification prompting
-     * the user to set one up (needed for auto location-based tracking to work).
+     * Called from the UI when a Present/Bunk/Cancel button is tapped.
+     * Room automatically emits a new LiveData value, updating the list.
      */
     public void markAttendance(int subjectId, int startTime, Integer classroomId, int status) {
         int roomId = (classroomId != null && classroomId > 0) ? classroomId : 0;
         attendanceRepo.updateAttendanceStatus(subjectId, todayDate, startTime, roomId, status);
 
-        // Notify the user to create a classroom if this subject has none assigned
+        // Bug #3 fix: dismiss the ongoing "Are you in class?" notification that
+        // LectureStartWorker/OngoingLectureWorker may have posted, so it doesn't
+        // linger after the user already answered via the in-app buttons.
+        cancelActiveLectureNotification(subjectId, startTime);
+
+        // Bug #5 fix: only nudge to create a classroom once per day, mirroring the
+        // debounce that DailySetupWorker uses — instead of re-posting on every tap.
         if (classroomId == null || classroomId == 0) {
-            AttendanceNotificationHelper.triggerCreateClassroomNotification(getApplication());
+            android.content.SharedPreferences prefs = getApplication()
+                    .getSharedPreferences("bunkmeter_prefs", Context.MODE_PRIVATE);
+            if (!todayDate.equals(prefs.getString("classroom_notif_date", ""))) {
+                AttendanceNotificationHelper.triggerCreateClassroomNotification(getApplication());
+                prefs.edit().putString("classroom_notif_date", todayDate).apply();
+            }
         }
-        // No need to call loadMergedData() — the LiveData observer fires automatically
     }
 
-    /**
-     * Maps Java Calendar day constants to the app's 0=Mon…4=Fri convention used in Timetable.
-     */
-    private int getMappedDay(int currentDayOfWeek) {
-        if (currentDayOfWeek == Calendar.MONDAY)    return 0;
-        if (currentDayOfWeek == Calendar.TUESDAY)   return 1;
-        if (currentDayOfWeek == Calendar.WEDNESDAY) return 2;
-        if (currentDayOfWeek == Calendar.THURSDAY)  return 3;
-        if (currentDayOfWeek == Calendar.FRIDAY)    return 4;
-        return -1; // Saturday / Sunday
+    /** Cancels the active-lecture notification using the same deterministic ID it was posted with. */
+    private void cancelActiveLectureNotification(int subjectId, int startTime) {
+        int activeNotifId = AttendanceLogic.activeNotificationId(subjectId, todayDate, startTime);
+        NotificationManager nm =
+                (NotificationManager) getApplication().getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) nm.cancel(activeNotifId);
     }
 }

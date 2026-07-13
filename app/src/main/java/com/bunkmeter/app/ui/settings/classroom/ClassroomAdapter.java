@@ -40,6 +40,8 @@ public class ClassroomAdapter extends RecyclerView.Adapter<ClassroomAdapter.View
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Classroom c = classrooms.get(position);
         holder.tvName.setText(c.getName());
+        holder.tvSubtitle.setText(String.format(java.util.Locale.getDefault(),
+                "Geofence radius: %.0f m", c.getRadius()));
         holder.itemView.setOnClickListener(v -> clickListener.onItemClick(c));
         holder.itemView.setOnLongClickListener(v -> {
             longClickListener.onItemLongClick(c);
@@ -51,10 +53,11 @@ public class ClassroomAdapter extends RecyclerView.Adapter<ClassroomAdapter.View
     public int getItemCount() { return classrooms.size(); }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName;
+        TextView tvName, tvSubtitle;
         ViewHolder(View view) {
             super(view);
             tvName = view.findViewById(R.id.tvItemClassName);
+            tvSubtitle = view.findViewById(R.id.tvClassroomSubtitle);
         }
     }
 }

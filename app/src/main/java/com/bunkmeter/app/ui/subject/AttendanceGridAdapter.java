@@ -1,10 +1,10 @@
 package com.bunkmeter.app.ui.subject;
 
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bunkmeter.app.R;
@@ -29,11 +29,12 @@ public class AttendanceGridAdapter extends RecyclerView.Adapter<AttendanceGridAd
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         int status = list.get(position);
+        android.content.Context ctx = holder.view.getContext();
 
         if (status == 1) {
-            holder.view.setBackgroundColor(Color.parseColor("#4CAF50"));
+            holder.view.setBackgroundColor(ContextCompat.getColor(ctx, R.color.status_present));
         } else {
-            holder.view.setBackgroundColor(Color.parseColor("#F44336"));
+            holder.view.setBackgroundColor(ContextCompat.getColor(ctx, R.color.status_bunk));
         }
     }
 

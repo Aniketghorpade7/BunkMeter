@@ -6,19 +6,21 @@ import android.os.Looper;
 import com.bunkmeter.app.database.AppDatabase;
 import com.bunkmeter.app.database.ClassroomDao;
 import com.bunkmeter.app.model.Classroom;
+import com.bunkmeter.app.scheduler.GeofenceManager;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ClassroomRepository {
     private final ClassroomDao classroomDao;
-    private final ExecutorService executor;
     private final Handler mainThreadHandler;
+    private final Application application; // kept so we can refresh geofences
 
     public ClassroomRepository(Application application) {
+        this.application = application;
         AppDatabase db = AppDatabase.getInstance(application);
         classroomDao = db.classroomDao();
-        executor = Executors.newSingleThreadExecutor();
+        // Use the shared DB write pool (same as every other repository) instead of
+        // a per-instance ExecutorService that was never shut down — that leaked a
+        // thread on every Fragment recreation.
         mainThreadHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -27,36 +29,41 @@ public class ClassroomRepository {
     public interface OnOperationCompleteListener { void onComplete(); }
 
     public void getActiveClassrooms(OnClassroomsLoadedListener listener) {
-        executor.execute(() -> {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
             List<Classroom> classrooms = classroomDao.getActiveClassrooms();
             mainThreadHandler.post(() -> listener.onLoaded(classrooms));
         });
     }
 
     public void getClassroomById(int id, OnClassroomLoadedListener listener) {
-        executor.execute(() -> {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
             Classroom classroom = classroomDao.getClassroomById(id);
             mainThreadHandler.post(() -> listener.onLoaded(classroom));
         });
     }
 
     public void insert(Classroom classroom, OnOperationCompleteListener listener) {
-        executor.execute(() -> {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
             classroomDao.insert(classroom);
+            // A classroom changed → rebuild the OS geofence set so automatic
+            // attendance reflects the new location immediately.
+            GeofenceManager.registerAllClassrooms(application);
             mainThreadHandler.post(listener::onComplete);
         });
     }
 
     public void update(Classroom classroom, OnOperationCompleteListener listener) {
-        executor.execute(() -> {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
             classroomDao.update(classroom);
+            GeofenceManager.registerAllClassrooms(application);
             mainThreadHandler.post(listener::onComplete);
         });
     }
 
     public void softDelete(int id, OnOperationCompleteListener listener) {
-        executor.execute(() -> {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
             classroomDao.softDelete(id);
+            GeofenceManager.registerAllClassrooms(application);
             mainThreadHandler.post(listener::onComplete);
         });
     }

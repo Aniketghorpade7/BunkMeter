@@ -24,15 +24,8 @@ import static androidx.room.ForeignKey.CASCADE;
 )
 public class Attendance
 {
-    // --- Status constants replaced by AttendanceStatus enum ---
-    // Keep numeric aliases for backward-compatible SQL queries / adapters that
-    // still compare against getStatus() int directly.
-    /** @deprecated Use {@link AttendanceStatus#PRESENT} */
-    @Deprecated
-    public static final int PRESENT = AttendanceStatus.PRESENT.value;  // 1
-    /** @deprecated Use {@link AttendanceStatus#BUNK} */
-    @Deprecated
-    public static final int ABSENT  = AttendanceStatus.BUNK.value;      // 0
+    // Status is stored as a raw int; use AttendanceStatus.fromInt() /
+    // getAttendanceStatus() to work with it as a typed enum.
 
     @PrimaryKey(autoGenerate = true)
     private int attendanceId;

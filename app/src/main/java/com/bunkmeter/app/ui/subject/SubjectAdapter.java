@@ -144,8 +144,10 @@ public class SubjectAdapter extends RecyclerView.Adapter<SubjectAdapter.ViewHold
                     pieEntries.add(new com.github.mikephil.charting.data.PieEntry((float)present, "Present"));
                     pieEntries.add(new com.github.mikephil.charting.data.PieEntry((float)(total-present), "Absent"));
                     com.github.mikephil.charting.data.PieDataSet dataSet = new com.github.mikephil.charting.data.PieDataSet(pieEntries, "");
-                    int colorPresent = android.graphics.Color.parseColor("#4CAF50");
-                    int colorAbsent = android.graphics.Color.parseColor("#F44336");
+                    int colorPresent = androidx.core.content.ContextCompat.getColor(
+                            holder.itemView.getContext(), com.bunkmeter.app.R.color.status_present);
+                    int colorAbsent = androidx.core.content.ContextCompat.getColor(
+                            holder.itemView.getContext(), com.bunkmeter.app.R.color.status_bunk);
                     dataSet.setColors(colorPresent, colorAbsent);
                     dataSet.setDrawValues(false); 
                     holder.pieChart.setData(new com.github.mikephil.charting.data.PieData(dataSet));

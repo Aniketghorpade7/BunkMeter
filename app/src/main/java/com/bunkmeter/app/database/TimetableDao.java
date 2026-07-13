@@ -81,4 +81,11 @@ public interface TimetableDao
     // Lookup classroom for attendance insertion
     @Query("SELECT * FROM Timetable WHERE subjectId = :subjectId AND dayOfWeek = :dayOfWeek AND startTime = :startTime LIMIT 1")
     com.bunkmeter.app.model.Timetable getTimetableForSubjectAndTimeSync(int subjectId, int dayOfWeek, int startTime);
+
+    // Used by GeofenceBroadcastReceiver: when the student enters a classroom, find
+    // any lecture happening in that room right now. We allow a 15-minute grace
+    // window before startTime so arriving slightly early still counts.
+    @Query("SELECT * FROM Timetable WHERE dayOfWeek = :dayOfWeek AND classroomId = :classroomId " +
+           "AND :nowMins BETWEEN (startTime - 15) AND endTime")
+    List<Timetable> getActiveLecturesForClassroomSync(int dayOfWeek, int classroomId, int nowMins);
 }

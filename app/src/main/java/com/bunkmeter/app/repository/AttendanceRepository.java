@@ -44,7 +44,26 @@ public class AttendanceRepository {
         return attendanceDao.getLiveAttendanceForDate(date);
     }
 
+    /**
+     * Legacy entry point (no endTime supplied). Kept so existing callers compile.
+     * Passing endTime = 0 tells the canonical method to look the real endTime up
+     * from the Timetable, which fixes the old bug where new rows stored endTime = 0.
+     */
     public void updateAttendanceStatus(int subjectId, String date, int startTime,
+                                       int classroomId, int status) {
+        updateAttendanceStatus(subjectId, date, startTime, 0, classroomId, status);
+    }
+
+    /**
+     * Canonical upsert. If a record for (subject, date, startTime) exists we just
+     * update its status; otherwise we insert a complete new row.
+     *
+     * <p><b>endTime handling (bug fix):</b> the previous version never set endTime
+     * on inserts, so every auto-created row stored endTime = 0 and corrupted any
+     * duration-based stat. Now: if a real endTime is passed we use it; if 0 is
+     * passed we look it up from the Timetable alongside the classroom.</p>
+     */
+    public void updateAttendanceStatus(int subjectId, String date, int startTime, int endTime,
                                        int classroomId, int status) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             Attendance existing = attendanceDao.getSpecificAttendance(subjectId, date, startTime);
@@ -55,34 +74,39 @@ public class AttendanceRepository {
                 newAttendance.setSubjectId(subjectId);
                 newAttendance.setDate(date);
                 newAttendance.setStartTime(startTime);
+                newAttendance.setEndTime(endTime); // may be overwritten by the lookup below
                 newAttendance.setStatus(status);
                 newAttendance.setLocationVerified(false);
 
-                // If classroomId is not provided, try to find it from Timetable
-                if (classroomId <= 0) {
+                // If classroom OR endTime is missing, fill them from the Timetable.
+                if (classroomId <= 0 || endTime <= 0) {
                     try {
-                        java.time.LocalDate localDate = java.time.LocalDate.parse(date);
-                        int dayOfWeekInput = localDate.getDayOfWeek().getValue(); // 1=Mon ... 7=Sun
+                        // Day-of-week mapping now lives in one place (fixes the old
+                        // Saturday gap and the duplicated mapping logic).
+                        java.util.Calendar cal = java.util.Calendar.getInstance();
+                        cal.setTime(new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                                .parse(date));
+                        int mappedDay = com.bunkmeter.app.utils.DateUtils.calendarToAppDay(
+                                cal.get(java.util.Calendar.DAY_OF_WEEK));
 
-                        // Map to our 0=Mon convention
-                        int mappedDay = -1;
-                        if (dayOfWeekInput == 1) mappedDay = 0; // MONDAY
-                        else if (dayOfWeekInput == 2) mappedDay = 1; // TUESDAY
-                        else if (dayOfWeekInput == 3) mappedDay = 2; // WEDNESDAY
-                        else if (dayOfWeekInput == 4) mappedDay = 3; // THURSDAY
-                        else if (dayOfWeekInput == 5) mappedDay = 4; // FRIDAY
-
-                        if (mappedDay != -1) {
+                        if (mappedDay != com.bunkmeter.app.utils.DateUtils.SUNDAY_NO_LECTURES) {
                             com.bunkmeter.app.model.Timetable t =
                                     timetableDao.getTimetableForSubjectAndTimeSync(subjectId, mappedDay, startTime);
-                            if (t != null && t.getClassroomId() != null) {
-                                newAttendance.setClassroomId(t.getClassroomId());
+                            if (t != null) {
+                                if (classroomId <= 0 && t.getClassroomId() != null) {
+                                    newAttendance.setClassroomId(t.getClassroomId());
+                                }
+                                if (endTime <= 0) {
+                                    newAttendance.setEndTime(t.getEndTime());
+                                }
                             }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                } else {
+                }
+
+                if (classroomId > 0) {
                     newAttendance.setClassroomId(classroomId);
                 }
 
@@ -93,7 +117,13 @@ public class AttendanceRepository {
 
     public void updateAttendanceStatus(int subjectId, String date, int startTime,
                                        int classroomId, AttendanceStatus status) {
-        updateAttendanceStatus(subjectId, date, startTime, classroomId, status.value);
+        updateAttendanceStatus(subjectId, date, startTime, 0, classroomId, status.value);
+    }
+
+    /** Endtime-aware enum overload used by geofencing and the auto-bunk worker. */
+    public void updateAttendanceStatus(int subjectId, String date, int startTime, int endTime,
+                                       int classroomId, AttendanceStatus status) {
+        updateAttendanceStatus(subjectId, date, startTime, endTime, classroomId, status.value);
     }
 
     public Attendance getSpecificAttendanceSync(int subjectId, String date, int startTime) {

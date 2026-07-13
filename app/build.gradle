@@ -38,6 +38,11 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+    // Instrumented-test support: WorkManager TestWorkerBuilder + AndroidX test runner/rules.
+    androidTestImplementation "androidx.work:work-testing:2.9.0"
+    androidTestImplementation "androidx.test:core:1.6.1"
+    androidTestImplementation "androidx.test:runner:1.6.2"
+    androidTestImplementation "androidx.test:rules:1.6.1"
 
     //dependances for Room
     implementation "androidx.room:room-runtime:2.6.1"
@@ -58,9 +63,6 @@ dependencies {
     // WorkManager for background tasks
     implementation "androidx.work:work-runtime:2.9.0"
 
-    // Required for ListenableWorker + CallbackToFutureAdapter (used by LocationReadingWorker)
-    implementation "androidx.concurrent:concurrent-futures:1.2.0"
-
     // Apache POI for Excel (.xlsx) generation
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
 
@@ -69,6 +71,4 @@ dependencies {
 
     // For PieCharts
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
-
-    implementation 'androidx.concurrent:concurrent-futures:1.1.0'
 }

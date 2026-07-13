@@ -1,14 +1,15 @@
 package com.bunkmeter.app.ui.home;
 
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bunkmeter.app.R;
+import com.bunkmeter.app.model.AttendanceStatus;
 import com.bunkmeter.app.model.HomeLectureItem;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,25 +60,34 @@ public class LectureAdapter extends RecyclerView.Adapter<LectureAdapter.ViewHold
         holder.tvSubject.setText(item.subjectName);
         holder.tvRoomName.setText(item.roomName);
 
-        // Update Status Colors cleanly
+        // Status colors come from the single-source @color/status_* resources (the
+        // same values the layouts use) instead of ad-hoc hardcoded hex.
+        android.content.Context ctx = holder.itemView.getContext();
         if (item.attendanceStatus == null) {
             holder.tvStatus.setText("PENDING");
-            holder.tvStatus.setTextColor(Color.GRAY);
-        } else if (item.attendanceStatus == 1) {
-            holder.tvStatus.setText("PRESENT");
-            holder.tvStatus.setTextColor(Color.parseColor("#4CAF50")); // Green
-        } else if (item.attendanceStatus == 0) {
-            holder.tvStatus.setText("BUNKED");
-            holder.tvStatus.setTextColor(Color.parseColor("#F44336")); // Red
-        } else if (item.attendanceStatus == 2) {
-            holder.tvStatus.setText("CLASS CANCELLED");
-            holder.tvStatus.setTextColor(Color.parseColor("#9E9E9E")); // Grey
+            holder.tvStatus.setTextColor(ContextCompat.getColor(ctx, R.color.status_pending));
+        } else {
+            switch (AttendanceStatus.fromInt(item.attendanceStatus)) {
+                case PRESENT:
+                    holder.tvStatus.setText("PRESENT");
+                    holder.tvStatus.setTextColor(ContextCompat.getColor(ctx, R.color.status_present));
+                    break;
+                case CANCELLED:
+                    holder.tvStatus.setText("CLASS CANCELLED");
+                    holder.tvStatus.setTextColor(ContextCompat.getColor(ctx, R.color.status_cancel));
+                    break;
+                case BUNK:
+                default:
+                    holder.tvStatus.setText("BUNKED");
+                    holder.tvStatus.setTextColor(ContextCompat.getColor(ctx, R.color.status_bunk));
+                    break;
+            }
         }
 
         // Button Clicks
-        holder.btnAttend.setOnClickListener(v -> clickListener.onActionClick(item, 1));
-        holder.btnBunk.setOnClickListener(v -> clickListener.onActionClick(item, 0));
-        holder.btnCancel.setOnClickListener(v -> clickListener.onActionClick(item, 2));
+        holder.btnAttend.setOnClickListener(v -> clickListener.onActionClick(item, AttendanceStatus.PRESENT.value));
+        holder.btnBunk.setOnClickListener(v -> clickListener.onActionClick(item, AttendanceStatus.BUNK.value));
+        holder.btnCancel.setOnClickListener(v -> clickListener.onActionClick(item, AttendanceStatus.CANCELLED.value));
     }
 
     private String formatTime(int totalMinutes) {

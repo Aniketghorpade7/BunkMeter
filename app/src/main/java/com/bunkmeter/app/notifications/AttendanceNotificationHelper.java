@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat;
 import com.bunkmeter.app.R;
 import com.bunkmeter.app.receiver.AttendanceActionReceiver;
 import com.bunkmeter.app.ui.settings.ClassroomActivity;
+import com.bunkmeter.app.utils.AttendanceLogic;
 
 import java.util.Objects;
 
@@ -40,71 +41,7 @@ public class AttendanceNotificationHelper {
     // Channel IDs
     // -------------------------------------------------------------------------
 
-    private static final String CHANNEL_FALLBACK   = "attendance_fallback";
     private static final String CHANNEL_CLASSROOM  = "create_classroom_prompt";
-
-    // -------------------------------------------------------------------------
-    // Fallback notification
-    // -------------------------------------------------------------------------
-
-    /**
-     * Fires when GPS confidence was too low to auto-confirm the student's
-     * presence.  The student taps YES (→ PRESENT) or NO (→ BUNK).
-     *
-     * @param lectureId  Unique lecture identifier.
-     * @param subjectId  Room DB subject ID.
-     * @param date       Date string in {@code "yyyy-MM-dd"} format.
-     * @param startTime  Lecture start time in minutes from midnight.
-     * @param sessionId  Deterministic session hash — used to cancel this
-     *                   exact notification when the user responds.
-     */
-    public static void triggerFallbackNotification(Context context,
-                                                    long lectureId,
-                                                    int subjectId,
-                                                    String date,
-                                                    int startTime,
-                                                    int sessionId) {
-        NotificationManager nm =
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (nm == null) return;
-
-        ensureChannel(nm, CHANNEL_FALLBACK, "Attendance Checks",
-                NotificationManager.IMPORTANCE_HIGH);
-
-        // Deterministic notification ID — unique per lecture, safe to cancel later
-        int notifId = Objects.hash(lectureId, subjectId, date);
-
-        // --- YES → mark PRESENT ---
-        Intent yesIntent = buildActionIntent(context, "ACTION_PRESENT",
-                subjectId, date, startTime, notifId, sessionId);
-        PendingIntent piYes = PendingIntent.getBroadcast(
-                context,
-                notifId,          // unique request code
-                yesIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        // --- NO → mark BUNK ---
-        Intent noIntent = buildActionIntent(context, "ACTION_BUNK",
-                subjectId, date, startTime, notifId, sessionId);
-        PendingIntent piNo = PendingIntent.getBroadcast(
-                context,
-                notifId + 1,      // offset by 1 so it gets its own slot
-                noIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        NotificationCompat.Builder builder =
-                new NotificationCompat.Builder(context, CHANNEL_FALLBACK)
-                        .setSmallIcon(android.R.drawable.ic_dialog_map)
-                        .setContentTitle("Attendance Check")
-                        .setContentText(
-                                "Unable to confirm your presence automatically. Are you in class?")
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setAutoCancel(true)
-                        .addAction(android.R.drawable.ic_input_add,   "YES (Present)", piYes)
-                        .addAction(android.R.drawable.ic_delete,      "NO (Bunk)",     piNo);
-
-        nm.notify(notifId, builder.build());
-    }
 
     // -------------------------------------------------------------------------
     // Classroom setup notification
@@ -203,8 +140,9 @@ public class AttendanceNotificationHelper {
 
         ensureChannel(nm, CHANNEL_ACTIVE_LECTURE, "Active Lecture Check-in", NotificationManager.IMPORTANCE_DEFAULT);
 
-        // Unique ID for this specific lecture's active prompt
-        int notifId = Objects.hash("active", subjectId, date, startTime);
+        // Unique ID for this specific lecture's active prompt — shared with the
+        // cancellers so dismissal can't silently miss (see AttendanceLogic).
+        int notifId = AttendanceLogic.activeNotificationId(subjectId, date, startTime);
 
         // Build the 3 actions
         Intent yesIntent = buildActionIntent(context, "ACTION_PRESENT", subjectId, date, startTime, notifId, sessionId);

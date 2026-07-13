@@ -99,7 +99,10 @@ public class ManageSubjectsBottomSheet extends BottomSheetDialogFragment {
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         android.app.AlertDialog alert = builder.create();
         alert.show();
-        alert.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(android.graphics.Color.RED);
+        // Destructive action: our single-source "danger" red (@color/status_bunk)
+        // instead of a raw Color.RED. Mid-tone, legible in both light and dark.
+        alert.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setTextColor(
+                androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_bunk));
     }
 
     // --- INNER ADAPTER ---

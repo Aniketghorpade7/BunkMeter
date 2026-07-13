@@ -10,7 +10,6 @@ import androidx.work.WorkManager;
 
 import com.bunkmeter.app.model.AttendanceStatus;
 import com.bunkmeter.app.repository.AttendanceRepository;
-import com.bunkmeter.app.service.AttendanceForegroundService;
 
 public class AttendanceActionReceiver extends BroadcastReceiver {
 
@@ -60,15 +59,11 @@ public class AttendanceActionReceiver extends BroadcastReceiver {
                 return;
         }
 
-        // --- CRITICAL BATTERY SAVER ---
-        // Kill the background location checks for THIS lecture only
+        // --- Cancel pending jobs for THIS lecture only ---
+        // This tag covers the OngoingLectureWorker reminder and the AutoBunkWorker
+        // safety net, so a manual decision stops them from firing later.
         if (sessionId != -1) {
             WorkManager.getInstance(context).cancelAllWorkByTag("SESSION_" + sessionId);
         }
-
-        // --- Stop the foreground service ---
-        Intent stopServiceIntent =
-                new Intent(context, AttendanceForegroundService.class);
-        context.stopService(stopServiceIntent);
     }
 }

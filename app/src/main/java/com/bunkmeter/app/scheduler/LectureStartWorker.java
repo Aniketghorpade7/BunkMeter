@@ -1,5 +1,6 @@
 package com.bunkmeter.app.scheduler;
 
+import android.app.Application;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -7,6 +8,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.bunkmeter.app.notifications.AttendanceNotificationHelper;
+import com.bunkmeter.app.repository.AttendanceRepository;
 
 public class LectureStartWorker extends Worker {
 
@@ -24,6 +26,13 @@ public class LectureStartWorker extends Worker {
         int sessionId = getInputData().getInt("session_id", -1);
 
         if (subjectId == -1 || date == null) return Result.failure();
+
+        // If geofencing already auto-marked this lecture (student was in the room
+        // before it started), skip the manual prompt entirely.
+        AttendanceRepository repo = new AttendanceRepository((Application) getApplicationContext());
+        if (repo.getSpecificAttendanceSync(subjectId, date, startTime) != null) {
+            return Result.success();
+        }
 
         // Calculate how long the lecture is in milliseconds
         long durationMillis = (long) (endTime - startTime) * 60 * 1000L;

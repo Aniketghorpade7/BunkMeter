@@ -1,10 +1,10 @@
 package com.bunkmeter.app.ui.subject;
 
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bunkmeter.app.R;
@@ -29,13 +29,14 @@ public class HeatmapAdapter extends RecyclerView.Adapter<HeatmapAdapter.ViewHold
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         int val = list.get(position);
+        android.content.Context ctx = holder.box.getContext();
 
         if (val == 1) {
-            holder.box.setBackgroundColor(Color.parseColor("#4CAF50")); // present
+            holder.box.setBackgroundColor(ContextCompat.getColor(ctx, R.color.status_present)); // present
         } else if (val == -1) {
-            holder.box.setBackgroundColor(Color.parseColor("#F44336")); // absent
+            holder.box.setBackgroundColor(ContextCompat.getColor(ctx, R.color.status_bunk)); // absent
         } else {
-            holder.box.setBackgroundColor(Color.parseColor("#E0E0E0")); // no lecture
+            holder.box.setBackgroundColor(ContextCompat.getColor(ctx, R.color.status_none)); // no lecture
         }
     }
 

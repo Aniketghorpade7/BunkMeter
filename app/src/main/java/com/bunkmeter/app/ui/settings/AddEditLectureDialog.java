@@ -154,6 +154,9 @@ public class AddEditLectureDialog extends Dialog {
                 extra.setClassroomId(roomId);
                 extra.setDate(targetDate);
                 extra.setStartTime(startTime);
+                extra.setEndTime(endTime); // Bug #2: extras have no Timetable row to
+                                           // recover endTime from, so carry it here or
+                                           // the row is stored with endTime=0.
                 extra.setStatus(-3); // PENDING EXTRA CLASS
 
                 AppDatabase.getInstance(context).attendanceDao().insertAttendance(extra);
